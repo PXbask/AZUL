@@ -9,12 +9,12 @@ namespace AZUL
     {
         public static string GetConfigAsset(string assetName, bool fromBytes)
         {
-            return Utility.Text.Format("Assets/GameMain/Configs/{0}.{1}", assetName, fromBytes ? "bytes" : "txt");
+            return Utility.Text.Format("Assets/GameMain/Configs/AZUL/{0}.{1}", assetName, fromBytes ? "bytes" : "txt");
         }
 
         public static string GetDataTableAsset(string assetName, bool fromBytes)
         {
-            return Utility.Text.Format("Assets/GameMain/DataTables/{0}.{1}", assetName, fromBytes ? "bytes" : "txt");
+            return Utility.Text.Format("Assets/GameMain/DataTables/AZUL/{0}.{1}", assetName, fromBytes ? "bytes" : "txt");
         }
 
         public static string GetDictionaryAsset(string assetName, bool fromBytes)
@@ -29,7 +29,7 @@ namespace AZUL
 
         public static string GetSceneAsset(string assetName)
         {
-            return Utility.Text.Format("Assets/GameMain/Scenes/{0}.unity", assetName);
+            return Utility.Text.Format("Assets/GameMain/Scenes/AZUL/{0}.unity", assetName);
         }
 
         public static string GetMusicAsset(string assetName)
@@ -49,7 +49,7 @@ namespace AZUL
 
         public static string GetUIFormAsset(string assetName)
         {
-            return Utility.Text.Format("Assets/GameMain/UI/UIForms/{0}.prefab", assetName);
+            return Utility.Text.Format("Assets/GameMain/UI/UIForms/AZUL/{0}.prefab", assetName);
         }
 
         public static string GetUISoundAsset(string assetName)

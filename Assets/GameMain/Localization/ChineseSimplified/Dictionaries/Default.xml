@@ -10,6 +10,7 @@
     <String Key="Menu.SettingButton" Value="设置" />
     <String Key="Menu.AboutButton" Value="关于" />
     <String Key="Menu.QuitButton" Value="退出" />
+	<String Key="GamePlay.StartButton" Value="开始" />
     <String Key="Dialog.ConfirmButton" Value="确定" />
     <String Key="Dialog.CancelButton" Value="取消" />
     <String Key="Dialog.OtherButton" Value="" />

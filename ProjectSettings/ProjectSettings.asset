@@ -164,7 +164,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
     Android: com.gameframework.starforce
-    Standalone: unity.Game Framework.Star Force
+    Standalone: com.Game-Framework.Star-Force
     VisionOS: com.gameframework.starforce
     iPhone: com.gameframework.starforce
     tvOS: com.gameframework.starforce
@@ -699,8 +699,8 @@ PlayerSettings:
   apiCompatibilityLevelPerPlatform: {}
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: Star Force
-  metroPackageVersion: 
+  metroPackageName: StarForce
+  metroPackageVersion: 1.0.0.0
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
@@ -708,7 +708,7 @@ PlayerSettings:
   metroCertificateNotAfter: 0000000000000000
   metroApplicationDescription: Star Force
   wsaImages: {}
-  metroTileShortName: 
+  metroTileShortName: Star Force
   metroTileShowName: 0
   metroMediumTileShowName: 0
   metroLargeTileShowName: 0

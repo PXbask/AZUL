@@ -187,6 +187,12 @@ namespace AZUL
             private set;
         }
 
+        public static BoardGameComponent BoardGame
+        {
+            get;
+            private set;
+        }
+
         private static void InitBuiltinComponents()
         {
             Base = UnityGameFramework.Runtime.GameEntry.GetComponent<BaseComponent>();
@@ -210,10 +216,16 @@ namespace AZUL
             UI = UnityGameFramework.Runtime.GameEntry.GetComponent<UIComponent>();
             WebRequest = UnityGameFramework.Runtime.GameEntry.GetComponent<WebRequestComponent>();
         }
+
+        private static void InitCustomComponents()
+        {
+            BoardGame = UnityGameFramework.Runtime.GameEntry.GetComponent<BoardGameComponent>();
+        }
+
         private void Start()
         {
             InitBuiltinComponents();
-            //InitCustomComponents();
+            InitCustomComponents();
         }
     }
 }
