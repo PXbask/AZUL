@@ -17,6 +17,8 @@ namespace AZUL
             "Scene",
             "UIForm",
             "Music",
+            "Piece",
+            "Entity",
         };
 
         private Dictionary<string, bool> m_LoadedFlag = new Dictionary<string, bool>();

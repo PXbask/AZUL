@@ -54,7 +54,7 @@ namespace AZUL
 
             if (m_StartGame)
             {
-                
+                ChangeState<ProcedureGameDealPiece>(procedureOwner);
             }
         }
 

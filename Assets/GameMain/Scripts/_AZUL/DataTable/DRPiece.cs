@@ -38,6 +38,7 @@ namespace AZUL
             }
 
             int index = 0;
+            index++;
             m_Id = int.Parse(columnStrings[index++]);
             Color = (PieceColorType)int.Parse(columnStrings[index++]);
 

@@ -36,7 +36,7 @@ namespace AZUL
 
             if (m_MenuForm != null)
             {
-                m_MenuForm.Close(isShutdown);
+                m_MenuForm.Close(true);  // 传入 true，立即关闭，跳过淡出动画
                 m_MenuForm = null;
             }
         }

@@ -44,7 +44,7 @@ namespace AZUL
 
         public static string GetEntityAsset(string assetName)
         {
-            return Utility.Text.Format("Assets/GameMain/Entities/{0}.prefab", assetName);
+            return Utility.Text.Format("Assets/GameMain/Entities/AZUL/{0}.prefab", assetName);
         }
 
         public static string GetUIFormAsset(string assetName)
