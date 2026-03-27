@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 namespace AZUL
@@ -22,6 +23,24 @@ namespace AZUL
         public List<ColoredPlaceTokenAreaRow> RightPlaceTokenAreas = new List<ColoredPlaceTokenAreaRow>();
 
         public List<LosePlaceTokenArea> LosePlaceTokenAreas = new List<LosePlaceTokenArea>();
+
+        private int m_Score = 0;
+
+        [SerializeField]
+        private TextMeshProUGUI scoreText;
+
+        public int Score
+        {
+            get => m_Score;
+            set
+            {
+                m_Score = value;
+                if (scoreText != null)
+                {
+                    scoreText.text = $"Score: {m_Score}";
+                }
+            }
+        }
 
         private void Start()
         {
@@ -57,6 +76,11 @@ namespace AZUL
                 area.Camp = camp;
                 area.PositionGroup = PlaceTokenPosition.Lose;
             }
+        }
+
+        public void GameReset()
+        {
+            Score = 0;
         }
 
         /// <summary>

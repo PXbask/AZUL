@@ -8,15 +8,10 @@ using ProcedureOwner = GameFramework.Fsm.IFsm<GameFramework.Procedure.IProcedure
 
 namespace AZUL
 {
-    public class ProcedureMain : ProcedureBase
+    public class ProcedureGameSettlePanel : ProcedureBase
     {
-        private bool m_StartGame = false;
-        private GamePlayForm m_GamePlayForm = null;
-        public void StartGame()
-        {
-            m_StartGame=true;
-        }
-
+        private SettlementForm m_SettlementForm = null;
+        private bool m_RestartGame = false;
         protected override void OnInit(ProcedureOwner procedureOwner)
         {
             base.OnInit(procedureOwner);
@@ -31,9 +26,8 @@ namespace AZUL
         {
             base.OnEnter(procedureOwner);
             GameEntry.Event.Subscribe(OpenUIFormSuccessEventArgs.EventId, OnOpenUIFormSuccess);
-
-            m_StartGame = false;
-            GameEntry.UI.OpenUIForm((int)UIFormId.GamePlayForm, this);
+            m_RestartGame = false;
+            GameEntry.UI.OpenUIForm((int)UIFormId.SettlementForm, this);
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
@@ -41,21 +35,25 @@ namespace AZUL
             base.OnLeave(procedureOwner, isShutdown);
             GameEntry.Event.Unsubscribe(OpenUIFormSuccessEventArgs.EventId, OnOpenUIFormSuccess);
 
-            if (m_GamePlayForm != null)
+            if (m_SettlementForm != null)
             {
-                m_GamePlayForm.Close(isShutdown);
-                m_GamePlayForm = null;
+                m_SettlementForm.Close(true);  // 传入 true，立即关闭，跳过淡出动画
+                m_SettlementForm = null;
             }
         }
 
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
-
-            if (m_StartGame)
+            if (m_RestartGame)
             {
                 ChangeState<ProcedureGameReset>(procedureOwner);
             }
+        }
+
+        public void RestartGame()
+        {
+            m_RestartGame=true;
         }
 
         private void OnOpenUIFormSuccess(object sender, GameEventArgs e)
@@ -66,7 +64,7 @@ namespace AZUL
                 return;
             }
 
-            m_GamePlayForm = (GamePlayForm)ne.UIForm.Logic;
+            m_SettlementForm = (SettlementForm)ne.UIForm.Logic;
         }
     }
 }

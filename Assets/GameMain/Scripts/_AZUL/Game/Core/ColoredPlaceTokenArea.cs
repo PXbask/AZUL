@@ -8,5 +8,7 @@ namespace AZUL
     {
         [SerializeField]
         private PieceColorType colorType;
+
+        public PieceColorType ColorType => colorType;
     }
 }

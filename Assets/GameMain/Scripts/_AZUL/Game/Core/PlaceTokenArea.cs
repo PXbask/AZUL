@@ -10,6 +10,8 @@ namespace AZUL
         [SerializeField]
         protected PieceToken token;
 
+        public PieceToken Token { get { return token; } }
+
         [SerializeField]
         protected PlaceTokenPosition positionGroup;
 
@@ -41,6 +43,10 @@ namespace AZUL
 
         public void PlaceToken(PieceToken pieceToken)
         {
+            if (pieceToken.OwnerPlaceTokenArea != null)
+            {
+                pieceToken.OwnerPlaceTokenArea.token = null;
+            }
             token = pieceToken;
             pieceToken.OwnerPlaceTokenArea = this;
 
@@ -68,6 +74,11 @@ namespace AZUL
                 Row = Row,
                 Column = Column,
             };
+        }
+
+        public void RemoveToken()
+        {
+            token = null;
         }
     }
 }

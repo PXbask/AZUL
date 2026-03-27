@@ -123,4 +123,4 @@ MonoBehaviour:
   yellowTokenMat: {fileID: 2100000, guid: 6bbdb6f2eedca114b9cd7f3f3a386387, type: 2}
   redTokenMat: {fileID: 2100000, guid: c9685146d470e0546a09d6e0101e2794, type: 2}
   blackTokenMat: {fileID: 2100000, guid: 8721e1cb84bc5f24d87f78bd30bf9537, type: 2}
-  whiteTokenMat: {fileID: 2100000, guid: 39a4ec15cc45f6e4d904433149db638f, type: 2}
+  whiteTokenMat: {fileID: 2100000, guid: 0b85ab6a0a220ef4eb36de83de7094d3, type: 2}

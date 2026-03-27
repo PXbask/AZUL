@@ -1,3 +1,4 @@
+using DG.Tweening;
 using GameFramework.DataTable;
 using GameFramework.Event;
 using System.Collections;
@@ -11,6 +12,8 @@ namespace AZUL
     public class BoardGameComponent : GameFrameworkComponent
     {
         public List<int> RemainPieceIds = new List<int>();
+
+        public List<int> LostPieceIds = new List<int>();
 
         [SerializeField]
         private bool m_Active = false;
@@ -33,15 +36,22 @@ namespace AZUL
         private PlayerBoard m_SelfBoard;
         private PlayerBoard m_OtherBoard;
         private MidBoard m_MidBoard;
+        public MidBoard MidBoard => m_MidBoard;
 
         public readonly int PlayerNum = 2;
         public readonly int FactoryDiskNum = 5;
+
+        public PlaceAreaCamp CurrentPlayer;
+
+        public bool CanInteractive { get; set; }
 
         protected override void Awake()
         {
             base.Awake();
             m_Active = false;
             m_HasSubscribe = false;
+
+            CanInteractive = false;
         }
 
         public void SubscribeEvents()
@@ -49,6 +59,7 @@ namespace AZUL
             if (m_HasSubscribe) return;
             // 订阅实体显示成功事件（在 Start 中确保 GameEntry 已初始化）
             GameEntry.Event.Subscribe(ShowEntitySuccessEventArgs.EventId, OnShowEntitySuccess);
+            m_HasSubscribe = true;
         }
 
         private void OnDestroy()
@@ -63,6 +74,7 @@ namespace AZUL
         private void Update()
         {
             if (!m_Active) return;
+            if (!CanInteractive) return;
 
             // 检测鼠标左键点击
             if (Input.GetMouseButtonDown(0))
@@ -82,7 +94,7 @@ namespace AZUL
                 return;
             }
 
-            if(m_SelectedPieceToken == null)
+            if (m_SelectedPieceToken == null)
             {
                 // 从鼠标位置发射射线
                 Ray ray = m_MainCamera.ScreenPointToRay(Input.mousePosition);
@@ -99,8 +111,8 @@ namespace AZUL
                         // 找到了 PieceToken，保存到缓存中
                         m_SelectedPieceToken = pieceToken;
 
-                        Log.Info("PieceToken selected. EntityId: {0}, Position: {1}", 
-                            pieceToken.Id, 
+                        Log.Info("PieceToken selected. EntityId: {0}, Position: {1}",
+                            pieceToken.Id,
                             pieceToken.transform.position);
                     }
                 }
@@ -120,12 +132,13 @@ namespace AZUL
                     if (placeArea != null)
                     {
                         // 找到了放置区域，进行后续处理
-                        Log.Info("PlaceTokenArea detected. Type: {0}, Position: {1}", 
-                            placeArea.GetType().Name, 
+                        Log.Info("PlaceTokenArea detected. Type: {0}, Position: {1}",
+                            placeArea.GetType().Name,
                             placeArea.transform.position);
 
                         // 处理放置逻辑
                         OnPlaceTokenToArea(m_SelectedPieceToken, placeArea);
+                        ClearSelectedPieceToken();
                     }
                     else
                     {
@@ -170,20 +183,116 @@ namespace AZUL
         {
             //=========检查是否可以放置==========
             var posData = targetArea.GetPositionData();
-            //如果对应的颜色区有这个颜色的棋子了，就不能放了；
-            //除非颜色盘中该颜色均填满并且可选棋子只剩下这个颜色了
-            //这样的话点击任意Manaul区均可把棋子放入失分区
-            
-
-            // 检查放置区域是否为空
-            if (!targetArea.IsEmpty())
+            //如果目的地不是本轮玩家侧的区域，就不能放了；
+            if (CurrentPlayer != targetArea.Camp)
             {
-                Log.Warning("PlaceTokenArea is not empty. Cannot place piece.");
+                Log.Info("Cannot place piece on opponent's area. Current player: {0}, Target area camp: {1}",
+                    CurrentPlayer, targetArea.Camp);
+                ClearSelectedPieceToken();
+                return;
+            }
+            //如果目的地不是手动区域或地板区域，就不能放了；
+            if (posData.PositionGroup != PlaceTokenPosition.Manual && posData.PositionGroup != PlaceTokenPosition.Lose)
+            {
+                Log.Info("Cannot place piece on this area. Position group: {0}", posData.PositionGroup);
                 ClearSelectedPieceToken();
                 return;
             }
 
-            targetArea.PlaceToken(pieceToken);
+            //目标位置是手动区域
+            if (posData.PositionGroup == PlaceTokenPosition.Manual)
+            {
+                //如果是手动区域并且对应的颜色区有这个颜色的棋子了，就不能放了；
+                if (BoardGameUtility.PlayerBoardHasColorInColoredAreaInRow(GetBoardWithCurrentComp(), posData.Row, pieceToken.PieceTokenData.ColorType))
+                {
+                    Log.Info("Cannot place piece in manual area because the colored area in the same row already has a piece of the same color.");
+                    ClearSelectedPieceToken();
+                    return;
+                }
+                //如果是手动区域并且放置区不是这个颜色的棋子，就不能放了
+                if (BoardGameUtility.PlayerBoardDiffColorInManualAreaInRow(GetBoardWithCurrentComp(), posData.Row, pieceToken.PieceTokenData.ColorType))
+                {
+                    Log.Info("Cannot place piece in manual area because the manual area in the same row has a piece of a different color.");
+                    ClearSelectedPieceToken();
+                    return;
+                }
+                //可以放置了,获取选择棋子所在的工厂圆盘所有的相同颜色棋子，从左到右放到对应行，多余的棋子放入减分区；工厂圆盘剩余棋子放入中间区域
+                //如果棋子不在工厂圆盘，需要把首位token放入减分区
+                if (pieceToken.OwnerPlaceTokenArea != null)
+                {
+                    //位于工厂区域
+                    if (pieceToken.OwnerPlaceTokenArea.PositionGroup == PlaceTokenPosition.Factory)
+                    {
+                        var remainTokens = new List<PieceToken>();
+                        var allSameColorTokens = BoardGameUtility.GetAllColorTypeTokenInFactory(pieceToken, out remainTokens);
+                        var leftAreas = BoardGameUtility.GetEmptyTokenAreaInManualAreaInRow(GetBoardWithCurrentComp(), posData.Row);
+                        var loseAreas = BoardGameUtility.GetEmptyTokenAreaInLoseArea(GetBoardWithCurrentComp());
+                        MovePieceListToManualSubLoseArea(allSameColorTokens, leftAreas, loseAreas);
+                        //将工厂圆盘内剩余token放入中间区域
+                        int remainCount = remainTokens.Count;
+                        var midList = BoardGameUtility.GetEmptyTokenAreaInMidArea(remainCount);
+                        for (int i = 0; i < remainCount; i++)
+                        {
+                            midList[i].PlaceToken(remainTokens[i]);
+                        }
+                    }
+                    else if (pieceToken.OwnerPlaceTokenArea.PositionGroup == PlaceTokenPosition.MidTable)
+                    {
+                        //位于中间区域
+                        var firstToken = BoardGameUtility.GetFirstTokenInMidArea();
+                        if (firstToken != null)
+                        {
+                            //需要把首位token放入减分区
+                            var loseAreas_fiestToken = BoardGameUtility.GetEmptyTokenAreaInLoseArea(GetBoardWithCurrentComp());
+                            MovePieceToSubLoseArea(new List<PieceToken> { firstToken }, loseAreas_fiestToken);
+                        }
+                        var allSameColorTokens = BoardGameUtility.GetAllColorTypeTokenInMidTable(pieceToken);
+                        var leftAreas = BoardGameUtility.GetEmptyTokenAreaInManualAreaInRow(GetBoardWithCurrentComp(), posData.Row);
+                        var loseAreas = BoardGameUtility.GetEmptyTokenAreaInLoseArea(GetBoardWithCurrentComp());
+                        MovePieceListToManualSubLoseArea(allSameColorTokens, leftAreas, loseAreas);
+                    }
+                }
+            }
+            //目标位置是减分区域
+            else
+            {
+                if (pieceToken.OwnerPlaceTokenArea != null)
+                {
+                    //位于工厂区域
+                    if (pieceToken.OwnerPlaceTokenArea.PositionGroup == PlaceTokenPosition.Factory)
+                    {
+                        var remainTokens = new List<PieceToken>();
+                        var allSameColorTokens = BoardGameUtility.GetAllColorTypeTokenInFactory(pieceToken, out remainTokens);
+                        var loseAreas = BoardGameUtility.GetEmptyTokenAreaInLoseArea(GetBoardWithCurrentComp());
+                        MovePieceToSubLoseArea(allSameColorTokens, loseAreas);
+                        //将工厂圆盘内剩余token放入中间区域
+                        int remainCount = remainTokens.Count;
+                        var midList = BoardGameUtility.GetEmptyTokenAreaInMidArea(remainCount);
+                        for (int i = 0; i < remainCount; i++)
+                        {
+                            midList[i].PlaceToken(remainTokens[i]);
+                        }
+                    }
+                    //位于中间区域
+                    else if (pieceToken.OwnerPlaceTokenArea.PositionGroup == PlaceTokenPosition.MidTable)
+                    {
+                        var firstToken = BoardGameUtility.GetFirstTokenInMidArea();
+                        if (firstToken != null)
+                        {
+                            //需要把首位token放入减分区
+                            var loseAreas_fiestToken = BoardGameUtility.GetEmptyTokenAreaInLoseArea(GetBoardWithCurrentComp());
+                            MovePieceToSubLoseArea(new List<PieceToken> { firstToken }, loseAreas_fiestToken);
+                        }
+                        var allSameColorTokens = BoardGameUtility.GetAllColorTypeTokenInMidTable(pieceToken);
+                        var loseAreas = BoardGameUtility.GetEmptyTokenAreaInLoseArea(GetBoardWithCurrentComp());
+                        MovePieceToSubLoseArea(allSameColorTokens, loseAreas);
+                    }
+                }
+            }
+
+            var tmpPlayer = CurrentPlayer;
+            ChangePlayer();
+            GameEntry.Event.Fire(this, MovePieceCompleteEventArgs.Create(null, null, null, tmpPlayer));
             ClearSelectedPieceToken();
         }
 
@@ -193,27 +302,32 @@ namespace AZUL
         public void GameReset()
         {
             m_Active = true;
+            CanInteractive = false;
+
+            // 清除所有在场的棋子实体
+            ClearAllPieceTokens();
 
             RemainPieceIds.Clear();
+            LostPieceIds.Clear();
             IDataTable<DRPiece> dtPiece = GameEntry.DataTable.GetDataTable<DRPiece>();
             foreach (DRPiece piece in dtPiece.GetAllDataRows())
             {
                 RemainPieceIds.Add(piece.Id);
             }
 
-            if(m_PieceBag == null)
+            if (m_PieceBag == null)
             {
                 m_PieceBag = GameObject.Find("PieceBag").transform;
             }
-            if(m_SelfBoard == null)
+            if (m_SelfBoard == null)
             {
                 m_SelfBoard = GameObject.Find("Board_self").GetComponent<PlayerBoard>();
             }
-            if(m_OtherBoard == null)
+            if (m_OtherBoard == null)
             {
                 m_OtherBoard = GameObject.Find("Board_other").GetComponent<PlayerBoard>();
             }
-            if(m_MidBoard == null)
+            if (m_MidBoard == null)
             {
                 m_MidBoard = GameObject.Find("MidBoard").GetComponent<MidBoard>();
             }
@@ -225,6 +339,11 @@ namespace AZUL
             }
 
             SubscribeEvents();
+            //默认先手玩家为自己
+            SetCurrentPlayer(PlaceAreaCamp.Self);
+
+            m_SelfBoard.GameReset();
+            m_OtherBoard.GameReset();
         }
 
         /// <summary>
@@ -232,16 +351,25 @@ namespace AZUL
         /// </summary>
         public void DealPiece()
         {
+            CanInteractive = false;
             if (!m_Active)
             {
                 Log.Error("BoardGameComponent is not active. Please call GameReset() before dealing pieces.");
                 return;
             }
 
-            RemainPieceIds.Remove(0);  // 假设0是一个特殊的棋子ID，代表空棋子或占位符，不需要发牌
-            SpawnPieceAndPlace(0, GetRemainSlotFromMidDisk());
+            if (RemainPieceIds.Remove(0))  // 假设0是一个特殊的棋子ID，代表空棋子或占位符，不需要发牌
+            {
+                SpawnPieceAndPlace(0, GetRemainSlotFromMidDisk());
+            }
 
             var midDiskSlots = m_MidBoard.FactoryDisks.SelectMany(disk => disk.TokenAreas).ToList();
+            if(RemainPieceIds.Count < midDiskSlots.Count)
+            {
+                //将弃牌区棋子全部放回棋子袋
+                RemainPieceIds.AddRange(LostPieceIds);
+                LostPieceIds.Clear();
+            }
             var randomTokens = TakeRandomPieces(midDiskSlots.Count);
             for (int i = 0; i < randomTokens.Count; i++)
             {
@@ -323,6 +451,286 @@ namespace AZUL
             }
 
             return result;
+        }
+
+        public void SetCurrentPlayer(PlaceAreaCamp player)
+        {
+            CurrentPlayer = player;
+            Log.Info("Current player set to: {0}", CurrentPlayer);
+        }
+
+        public PlayerBoard GetBoardWithCurrentComp()
+        {
+            if (CurrentPlayer == PlaceAreaCamp.Self)
+            {
+                return m_SelfBoard;
+            }
+            else
+            {
+                return m_OtherBoard;
+            }
+        }
+
+        /// <summary>
+        /// 将当前棋子放入弃牌区，并播放动画
+        /// </summary>
+        /// <param name="pieceToken"></param>
+        public void LosePiece(PieceToken pieceToken)
+        {
+            pieceToken.CanInteractive = false;
+            if (pieceToken.OwnerPlaceTokenArea != null)
+            {
+                pieceToken.OwnerPlaceTokenArea.RemoveToken();
+                pieceToken.OwnerPlaceTokenArea = null;
+            }
+
+            pieceToken.CachedTransform.DOMove(m_PieceBag.position, 0.5f).SetEase(Ease.InBack).OnComplete(() =>
+            {
+                GameEntry.Entity.HideEntity(pieceToken.Id);
+            });
+
+            LostPieceIds.Add(pieceToken.PieceTokenData.PieceId);
+        }
+
+        /// <summary>
+        /// Distributes a list of same-color piece tokens into available manual and lose areas, placing any excess
+        /// tokens into the discard area if necessary.
+        /// </summary>
+        /// <remarks>If the combined capacity of manual and lose areas is insufficient for all tokens, any
+        /// remaining tokens are moved to the discard area. The order of placement preserves the order of tokens in the
+        /// input list.</remarks>
+        /// <param name="allSameColorTokens">The list of piece tokens of the same color to be distributed. Cannot be null.</param>
+        /// <param name="remainManualAreas">The list of available manual placement areas for tokens. The method attempts to fill these areas first.
+        /// Cannot be null.</param>
+        /// <param name="remainLoseAreas">The list of available lose areas for tokens. Used if manual areas are insufficient. Cannot be null.</param>
+        public void MovePieceListToManualSubLoseArea
+            (List<PieceToken> allSameColorTokens, List<PlaceTokenArea> remainManualAreas, List<LosePlaceTokenArea> remainLoseAreas)
+        {
+            //如果手动区域可以容纳所有相同颜色棋子，就放到手动区域；
+            if (allSameColorTokens.Count <= remainManualAreas.Count)
+            {
+                for (int i = 0; i < allSameColorTokens.Count; i++)
+                {
+                    remainManualAreas[i].PlaceToken(allSameColorTokens[i]);
+                }
+            }
+            //如果不可以容纳但手动区域和减分区域加起来可以容纳，就先放满手动区域再放减分区域；
+            else if (allSameColorTokens.Count > remainManualAreas.Count && allSameColorTokens.Count <= remainManualAreas.Count + remainLoseAreas.Count)
+            {
+
+                for (int i = 0; i < remainManualAreas.Count; i++)
+                {
+                    remainManualAreas[i].PlaceToken(allSameColorTokens[i]);
+                }
+                for (int i = remainManualAreas.Count; i < allSameColorTokens.Count; i++)
+                {
+                    remainLoseAreas[i - remainManualAreas.Count].PlaceToken(allSameColorTokens[i]);
+                }
+            }
+            //如果连减分区域也放不下了，就先放满手动区域和减分区域，剩余的放入弃牌区
+            else
+            {
+                for (int i = 0; i < remainManualAreas.Count; i++)
+                {
+                    remainManualAreas[i].PlaceToken(allSameColorTokens[i]);
+                }
+                for (int i = remainManualAreas.Count; i < remainManualAreas.Count + remainLoseAreas.Count; i++)
+                {
+                    remainLoseAreas[i - remainManualAreas.Count].PlaceToken(allSameColorTokens[i]);
+                }
+                //剩余的放入弃牌区
+                for (int i = remainManualAreas.Count + remainLoseAreas.Count; i < allSameColorTokens.Count; i++)
+                {
+                    LosePiece(allSameColorTokens[i]);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 将一系列棋子放入减分区，如果减分区放不下了就放入弃牌区
+        /// </summary>
+        /// <param name="allSameColorTokens"></param>
+        /// <param name="remainLoseAreas"></param>
+        public void MovePieceToSubLoseArea(List<PieceToken> allSameColorTokens, List<LosePlaceTokenArea> remainLoseAreas)
+        {
+            //如果减分区域可以容纳所有相同颜色棋子，就放到减分区域；
+            if (allSameColorTokens.Count <= remainLoseAreas.Count)
+            {
+                for (int i = 0; i < allSameColorTokens.Count; i++)
+                {
+                    remainLoseAreas[i].PlaceToken(allSameColorTokens[i]);
+                }
+            }
+            //如果连减分区域放不下了，就先放满减分区域，剩余的放入弃牌区
+            else
+            {
+                for (int i = 0; i < remainLoseAreas.Count; i++)
+                {
+                    remainLoseAreas[i].PlaceToken(allSameColorTokens[i]);
+                }
+                //剩余的放入弃牌区
+                for (int i = remainLoseAreas.Count; i < allSameColorTokens.Count; i++)
+                {
+                    LosePiece(allSameColorTokens[i]);
+                }
+            }
+        }
+
+        private void ChangePlayer()
+        {
+            if (CurrentPlayer == PlaceAreaCamp.Self)
+            {
+                SetCurrentPlayer(PlaceAreaCamp.Other);
+                return;
+            }
+            if (CurrentPlayer == PlaceAreaCamp.Other)
+            {
+                SetCurrentPlayer(PlaceAreaCamp.Self);
+                return;
+            }
+        }
+
+        public bool MidFactoryAreaEmpty()
+        {
+            return BoardGameUtility.FactorysEmpty() && BoardGameUtility.MidTableEmpty();
+        }
+
+        /// <summary>
+        /// 如果没有则将双方填满的手动区移动到颜色区,并计算分数
+        /// </summary>
+        public void MoveFilledRowInManualAreaToColoredArea()
+        {
+            //先移动自己的
+            MoveFilledRowInManualAreaToColoredAreaPerPlayer(PlaceAreaCamp.Self);
+
+            //再移动对手的
+            MoveFilledRowInManualAreaToColoredAreaPerPlayer(PlaceAreaCamp.Other);
+        }
+
+        public void MoveFilledRowInManualAreaToColoredAreaPerPlayer(PlaceAreaCamp camp)
+        {
+            PlayerBoard playerBoard = null;
+            if(camp == PlaceAreaCamp.Self)
+            {
+                playerBoard = m_SelfBoard;
+            }
+            else if(camp == PlaceAreaCamp.Other)
+            {
+                playerBoard = m_OtherBoard;
+            }
+
+            var pieceRows = BoardGameUtility.GetFilledRowInManualArea(playerBoard);
+            foreach (var row in pieceRows)
+            {
+                var firstItem = row.Areas[0];
+                var data = firstItem.GetPositionData();
+                var targetArea = BoardGameUtility.GetColoredTileInColoredArea(playerBoard, data.Row, firstItem.Token.PieceTokenData.ColorType);
+                //计算分数
+                int stepScore = BoardGameUtility.CalculateScorePieceMoveToColoredArea(playerBoard, targetArea);
+                BoardGameUtility.PlayerAddScore(playerBoard, stepScore);
+                //表现：将第一个token放入对应颜色区，其余进入弃牌区
+                if (firstItem.Token != null)
+                {
+                    targetArea.PlaceToken(firstItem.Token);
+                    for (int i = 1; i < row.Areas.Count; i++)
+                    {
+                        LosePiece(row.Areas[i].Token);
+                    }
+                }
+            }
+
+            //然后计算减分区
+            var loseAreas = BoardGameUtility.GetAllFilledAreaInLoseArea(playerBoard);
+            for (int i = 0; i < loseAreas.Count; i++)
+            {
+                var loseArea = loseAreas[i];
+                if (loseArea.Token != null)
+                {
+                    BoardGameUtility.PlayerAddScore(playerBoard, loseArea.losePoint);
+
+                    //如果是首位token，放回中间区域，否则放入弃牌区
+                    if(loseArea.Token.PieceTokenData.ColorType == PieceColorType.SpecialToken)
+                    {
+                        var midArea = BoardGameUtility.GetEmptyTokenAreaInMidArea(1);
+                        if(midArea.Count > 0)
+                        {
+                            midArea[0].PlaceToken(loseArea.Token);
+                            loseArea.RemoveToken();
+                        }
+                    }
+                    else
+                    {
+                        LosePiece(loseArea.Token);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 检查是否有玩家的颜色区某行被填满了
+        /// </summary>
+        /// <returns></returns>
+        public bool ExistColoredAreaRowFullFilled()
+        {
+            return BoardGameUtility.ExistColoredAreaRowFullFilled(m_SelfBoard)
+                || BoardGameUtility.ExistColoredAreaRowFullFilled(m_OtherBoard);
+        }
+
+        /// <summary>
+        /// 最终阶段结算，并计算分数
+        /// </summary>
+        public void FinalSettlement()
+        {
+            var score = BoardGameUtility.CalcualteFinalScoreGened(m_SelfBoard);
+            BoardGameUtility.PlayerAddScore(m_SelfBoard, score);
+
+            score = BoardGameUtility.CalcualteFinalScoreGened(m_OtherBoard);
+            BoardGameUtility.PlayerAddScore(m_OtherBoard, score);
+        }
+
+        public PlayerBoard GetWinner()
+        {
+            if (m_SelfBoard.Score > m_OtherBoard.Score)
+            {
+                return m_SelfBoard;
+            }
+            else if (m_SelfBoard.Score < m_OtherBoard.Score)
+            {
+                return m_OtherBoard;
+            }
+            else
+            {
+                return null; // 平局
+            }
+        }
+
+        /// <summary>
+        /// 清除所有在场的棋子实体
+        /// </summary>
+        private void ClearAllPieceTokens()
+        {
+            // 获取所有已加载的实体
+            var allEntities = GameEntry.Entity.GetAllLoadedEntities();
+
+            // 遍历并隐藏所有 PieceToken 类型的实体
+            foreach (var entity in allEntities)
+            {
+                var pieceToken = entity.GetComponent<PieceToken>();
+                if (pieceToken)
+                {
+                    // 清除棋子与放置区域的关联
+                    if (pieceToken.OwnerPlaceTokenArea != null)
+                    {
+                        pieceToken.OwnerPlaceTokenArea.RemoveToken();
+                        pieceToken.OwnerPlaceTokenArea = null;
+                    }
+
+                    // 隐藏实体
+                    GameEntry.Entity.HideEntity(pieceToken);
+                }
+            }
+
+            Log.Info("Cleared all piece tokens. Total entities: {0}", allEntities.Length);
         }
     }
 }

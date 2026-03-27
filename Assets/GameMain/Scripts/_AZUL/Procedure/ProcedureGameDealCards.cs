@@ -5,7 +5,7 @@ using ProcedureOwner = GameFramework.Fsm.IFsm<GameFramework.Procedure.IProcedure
 
 namespace AZUL
 {
-    public class ProcedureGameDealPiece : ProcedureBase
+    public class ProcedureGameDealCards : ProcedureBase
     {
         private BoardGameComponent m_BoardGameComponent = null;
 
@@ -19,11 +19,9 @@ namespace AZUL
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
-            m_BoardGameComponent = GameEntry.BoardGame;
-            m_BoardGameComponent.GameReset();
-            m_DealCompleted = false;
 
-            m_BoardGameComponent.DealPiece();
+            m_BoardGameComponent = GameEntry.BoardGame;
+            m_DealCompleted = false;
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
@@ -35,15 +33,22 @@ namespace AZUL
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
 
-            if (m_DealCompleted)
+            if (!m_DealCompleted)
             {
-
+                m_BoardGameComponent.DealPiece();
+                m_DealCompleted = true;
+                if (m_DealCompleted)
+                {
+                    if(m_BoardGameComponent.CurrentPlayer == PlaceAreaCamp.Self)
+                    {
+                        ChangeState<ProcedureGameSelfRound>(procedureOwner);
+                    }
+                    if (m_BoardGameComponent.CurrentPlayer == PlaceAreaCamp.Other)
+                    {
+                        ChangeState<ProcedureGameOtherRound>(procedureOwner);
+                    }
+                }
             }
-        }
-
-        public void DealCompleted()
-        {
-            m_DealCompleted = true;
         }
     }
 }
