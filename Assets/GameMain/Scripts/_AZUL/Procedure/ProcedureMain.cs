@@ -34,6 +34,10 @@ namespace AZUL
 
             m_StartGame = false;
             GameEntry.UI.OpenUIForm((int)UIFormId.GamePlayForm, this);
+
+            //初始化裁判
+            GameEntry.Referee.GameInit();
+            GameEntry.Referee.ShowTip("欢迎来到AZUL! 准备好了吗?");
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)

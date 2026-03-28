@@ -23,6 +23,8 @@ namespace AZUL
             m_BoardGameComponent = GameEntry.BoardGame;
             m_BoardGameComponent.CanInteractive = false;
             m_FinalSettle = false;
+
+            GameEntry.Referee.ShowTip("检测到有玩家达成胜利条件,进行最终结算...");
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)

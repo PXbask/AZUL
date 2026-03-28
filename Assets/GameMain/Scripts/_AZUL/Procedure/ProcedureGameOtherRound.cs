@@ -26,6 +26,8 @@ namespace AZUL
 
             // 订阅棋子移动完成事件
             GameEntry.Event.Subscribe(MovePieceCompleteEventArgs.EventId, OnMovePieceComplete);
+
+            GameEntry.Referee.ShowTip("现在是对手的回合");
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)

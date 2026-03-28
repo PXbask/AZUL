@@ -193,6 +193,12 @@ namespace AZUL
             private set;
         }
 
+        public static RefereeComponent Referee
+        {
+            get;
+            private set;
+        }
+
         private static void InitBuiltinComponents()
         {
             Base = UnityGameFramework.Runtime.GameEntry.GetComponent<BaseComponent>();
@@ -220,6 +226,7 @@ namespace AZUL
         private static void InitCustomComponents()
         {
             BoardGame = UnityGameFramework.Runtime.GameEntry.GetComponent<BoardGameComponent>();
+            Referee = UnityGameFramework.Runtime.GameEntry.GetComponent<RefereeComponent>();
         }
 
         private void Start()

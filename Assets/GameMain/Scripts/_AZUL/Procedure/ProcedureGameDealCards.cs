@@ -22,6 +22,8 @@ namespace AZUL
 
             m_BoardGameComponent = GameEntry.BoardGame;
             m_DealCompleted = false;
+
+            GameEntry.Referee.ShowTip("发牌中...");
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)

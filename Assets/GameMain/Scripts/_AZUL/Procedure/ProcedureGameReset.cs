@@ -24,6 +24,8 @@ namespace AZUL
             base.OnEnter(procedureOwner);
             m_BoardGameComponent = GameEntry.BoardGame;
             m_ResetCompleted = false;
+
+            GameEntry.Referee.ShowTip("正在整理桌面...");
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)

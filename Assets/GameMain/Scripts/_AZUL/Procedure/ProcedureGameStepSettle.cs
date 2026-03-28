@@ -24,6 +24,8 @@ namespace AZUL
             m_BoardGameComponent = GameEntry.BoardGame;
             m_BoardGameComponent.CanInteractive = false;
             m_Settle = false;
+
+            GameEntry.Referee.ShowTip("桌上没有棋子了, 即将结算...");
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)

@@ -37,7 +37,7 @@ namespace AZUL
                 m_Score = value;
                 if (scoreText != null)
                 {
-                    scoreText.text = $"Score: {m_Score}";
+                    scoreText.text = $"当前分数:{m_Score}";
                 }
             }
         }

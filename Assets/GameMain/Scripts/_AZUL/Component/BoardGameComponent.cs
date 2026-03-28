@@ -625,9 +625,7 @@ namespace AZUL
                 var firstItem = row.Areas[0];
                 var data = firstItem.GetPositionData();
                 var targetArea = BoardGameUtility.GetColoredTileInColoredArea(playerBoard, data.Row, firstItem.Token.PieceTokenData.ColorType);
-                //计算分数
-                int stepScore = BoardGameUtility.CalculateScorePieceMoveToColoredArea(playerBoard, targetArea);
-                BoardGameUtility.PlayerAddScore(playerBoard, stepScore);
+
                 //表现：将第一个token放入对应颜色区，其余进入弃牌区
                 if (firstItem.Token != null)
                 {
@@ -637,6 +635,10 @@ namespace AZUL
                         LosePiece(row.Areas[i].Token);
                     }
                 }
+
+                //计算分数
+                int stepScore = BoardGameUtility.CalculateScorePieceMoveToColoredArea(playerBoard, targetArea);
+                BoardGameUtility.PlayerAddScore(playerBoard, stepScore);
             }
 
             //然后计算减分区

@@ -32,7 +32,7 @@ namespace AZUL
         {
             get
             {
-                return transform.position + Vector3.up * 0.07f;
+                return transform.position + Vector3.up * 0.02f;
             }
         }
 
