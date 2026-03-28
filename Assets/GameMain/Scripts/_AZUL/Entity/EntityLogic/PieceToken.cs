@@ -1,3 +1,4 @@
+using DG.Tweening;
 using StarForce;
 using System.Collections;
 using System.Collections.Generic;
@@ -35,6 +36,9 @@ namespace AZUL
             set => m_PlaceTokenArea = value;
         }
 
+        private Tween m_SelectTween = null;
+        private Tween m_DeselectTween = null;
+
 #if UNITY_2017_3_OR_NEWER
         protected override void OnInit(object userData)
 #else
@@ -42,6 +46,7 @@ namespace AZUL
 #endif
         {
             base.OnInit(userData);
+            m_SelectTween = null;
         }
 
 #if UNITY_2017_3_OR_NEWER
@@ -72,6 +77,55 @@ namespace AZUL
 #endif
         {
             base.OnUpdate(elapseSeconds, realElapseSeconds);
+        }
+
+        protected override void OnHide(bool isShutdown, object userData)
+        {
+            base.OnHide(isShutdown, userData);
+
+            if (m_SelectTween != null)
+            {
+                m_SelectTween.Kill();
+                m_SelectTween=null;
+            }
+            if(m_DeselectTween != null)
+            {
+                m_DeselectTween.Kill();
+                m_DeselectTween=null;
+            }
+        }
+
+        public void OnSelected()
+        {
+            //表现：向上移动一定距离
+            var area = OwnerPlaceTokenArea;
+            if (area != null)
+            {
+                if(m_DeselectTween != null)
+                {
+                    m_DeselectTween.Kill();
+                    m_DeselectTween = null;
+                }
+                var endPos = area.PlaceDestination + Vector3.up * 0.2f;
+                
+                m_SelectTween = CachedTransform.DOMove(endPos, 0.2f);
+            }
+        }
+
+        public void OnDeselected()
+        {
+            var area = OwnerPlaceTokenArea;
+            if (area != null)
+            {
+                if (m_SelectTween != null)
+                {
+                    m_SelectTween.Kill();
+                    m_DeselectTween = null;
+                }
+                var endPos = area.PlaceDestination;
+
+                m_SelectTween = CachedTransform.DOMove(endPos, 0.2f);
+            }
         }
     }
 }

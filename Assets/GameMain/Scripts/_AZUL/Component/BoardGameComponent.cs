@@ -1,6 +1,7 @@
 using DG.Tweening;
 using GameFramework.DataTable;
 using GameFramework.Event;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +31,7 @@ namespace AZUL
         /// 主相机（用于射线检测）
         /// </summary>
         private Camera m_MainCamera;
+        private Transform m_TargetCameraTrans;
 
         private Transform m_PieceBag;
 
@@ -109,7 +111,7 @@ namespace AZUL
                     if (pieceToken != null && pieceToken.CanInteractive)
                     {
                         // 找到了 PieceToken，保存到缓存中
-                        m_SelectedPieceToken = pieceToken;
+                        SelectPieceToken(pieceToken);
 
                         Log.Info("PieceToken selected. EntityId: {0}, Position: {1}",
                             pieceToken.Id,
@@ -138,23 +140,31 @@ namespace AZUL
 
                         // 处理放置逻辑
                         OnPlaceTokenToArea(m_SelectedPieceToken, placeArea);
-                        ClearSelectedPieceToken();
                     }
                     else
                     {
                         // 点击的不是有效的放置区域，取消选中
                         Log.Info("Invalid placement area. Deselecting piece.");
-                        ClearSelectedPieceToken();
+                        ClearSelectedPieceTokenWithAnim();
                     }
                 }
                 else
                 {
                     // 没有点击到任何物体，取消选中
-                    ClearSelectedPieceToken();
+                    ClearSelectedPieceTokenWithAnim();
                 }
             }
         }
 
+        /// <summary>
+        /// 选中对应棋子
+        /// </summary>
+        /// <param name="pieceToken"></param>
+        private void SelectPieceToken(PieceToken pieceToken)
+        {
+            m_SelectedPieceToken = pieceToken;
+            pieceToken.OnSelected();
+        }
 
         /// <summary>
         /// 获取当前选中的棋子
@@ -162,6 +172,19 @@ namespace AZUL
         public PieceToken GetSelectedPieceToken()
         {
             return m_SelectedPieceToken;
+        }
+
+        /// <summary>
+        /// 清除当前选中的棋子,有动画
+        /// </summary>
+        public void ClearSelectedPieceTokenWithAnim()
+        {
+            if (m_SelectedPieceToken != null)
+            {
+                m_SelectedPieceToken.OnDeselected();
+                Log.Info("Cleared selected piece. EntityId: {0}", m_SelectedPieceToken.Id);
+                m_SelectedPieceToken = null;
+            }
         }
 
         /// <summary>
@@ -188,14 +211,14 @@ namespace AZUL
             {
                 Log.Info("Cannot place piece on opponent's area. Current player: {0}, Target area camp: {1}",
                     CurrentPlayer, targetArea.Camp);
-                ClearSelectedPieceToken();
+                ClearSelectedPieceTokenWithAnim();
                 return;
             }
             //如果目的地不是手动区域或地板区域，就不能放了；
             if (posData.PositionGroup != PlaceTokenPosition.Manual && posData.PositionGroup != PlaceTokenPosition.Lose)
             {
                 Log.Info("Cannot place piece on this area. Position group: {0}", posData.PositionGroup);
-                ClearSelectedPieceToken();
+                ClearSelectedPieceTokenWithAnim();
                 return;
             }
 
@@ -206,14 +229,14 @@ namespace AZUL
                 if (BoardGameUtility.PlayerBoardHasColorInColoredAreaInRow(GetBoardWithCurrentComp(), posData.Row, pieceToken.PieceTokenData.ColorType))
                 {
                     Log.Info("Cannot place piece in manual area because the colored area in the same row already has a piece of the same color.");
-                    ClearSelectedPieceToken();
+                    ClearSelectedPieceTokenWithAnim();
                     return;
                 }
                 //如果是手动区域并且放置区不是这个颜色的棋子，就不能放了
                 if (BoardGameUtility.PlayerBoardDiffColorInManualAreaInRow(GetBoardWithCurrentComp(), posData.Row, pieceToken.PieceTokenData.ColorType))
                 {
                     Log.Info("Cannot place piece in manual area because the manual area in the same row has a piece of a different color.");
-                    ClearSelectedPieceToken();
+                    ClearSelectedPieceTokenWithAnim();
                     return;
                 }
                 //可以放置了,获取选择棋子所在的工厂圆盘所有的相同颜色棋子，从左到右放到对应行，多余的棋子放入减分区；工厂圆盘剩余棋子放入中间区域
@@ -296,25 +319,8 @@ namespace AZUL
             ClearSelectedPieceToken();
         }
 
-        /// <summary>
-        /// 重置游戏
-        /// </summary>
-        public void GameReset()
+        public void GameInit()
         {
-            m_Active = true;
-            CanInteractive = false;
-
-            // 清除所有在场的棋子实体
-            ClearAllPieceTokens();
-
-            RemainPieceIds.Clear();
-            LostPieceIds.Clear();
-            IDataTable<DRPiece> dtPiece = GameEntry.DataTable.GetDataTable<DRPiece>();
-            foreach (DRPiece piece in dtPiece.GetAllDataRows())
-            {
-                RemainPieceIds.Add(piece.Id);
-            }
-
             if (m_PieceBag == null)
             {
                 m_PieceBag = GameObject.Find("PieceBag").transform;
@@ -337,6 +343,32 @@ namespace AZUL
             {
                 Log.Warning("Main Camera not found. Raycast detection will not work.");
             }
+            if (m_TargetCameraTrans == null)
+            {
+                m_TargetCameraTrans = GameObject.Find("TargetCameraTrans").transform;
+            }
+        }
+
+        /// <summary>
+        /// 重置游戏
+        /// </summary>
+        public void GameReset()
+        {
+            m_Active = true;
+            CanInteractive = false;
+
+            // 清除所有在场的棋子实体
+            ClearAllPieceTokens();
+
+            RemainPieceIds.Clear();
+            LostPieceIds.Clear();
+            IDataTable<DRPiece> dtPiece = GameEntry.DataTable.GetDataTable<DRPiece>();
+            foreach (DRPiece piece in dtPiece.GetAllDataRows())
+            {
+                RemainPieceIds.Add(piece.Id);
+            }
+
+            GameInit();
 
             SubscribeEvents();
             //默认先手玩家为自己
@@ -445,7 +477,7 @@ namespace AZUL
             // 随机抽取 n 次
             for (int i = 0; i < actualCount; i++)
             {
-                int randomIndex = Random.Range(0, RemainPieceIds.Count);
+                int randomIndex = UnityEngine.Random.Range(0, RemainPieceIds.Count);
                 result.Add(RemainPieceIds[randomIndex]);
                 RemainPieceIds.RemoveAt(randomIndex);
             }
@@ -733,6 +765,30 @@ namespace AZUL
             }
 
             Log.Info("Cleared all piece tokens. Total entities: {0}", allEntities.Length);
+        }
+
+        /// <summary>
+        /// 游戏开始时的过场动画
+        /// </summary>
+        /// <param name="callback"></param>
+        public void MoveCameraAnimWhenStartGame(Action callback)
+        {
+            if (m_TargetCameraTrans != null && m_MainCamera != null)
+            {
+                m_MainCamera.transform.DOMove(m_TargetCameraTrans.position, 4f).SetEase(Ease.InOutSine);
+                m_MainCamera.transform.DORotateQuaternion(m_TargetCameraTrans.rotation, 4f)
+                    .SetEase(Ease.InOutSine).OnComplete(() =>
+                    {
+                        callback.Invoke();
+                        CameraFunctionActive(true);
+                    });
+            }
+        }
+
+        public void CameraFunctionActive(bool active)
+        {
+            var movement = m_MainCamera.GetComponent<CameraMovement>();
+            movement.FunctionActive = active;
         }
     }
 }

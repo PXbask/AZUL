@@ -35,9 +35,7 @@
       <Resource Name="Materials/AZUL/table_mat" LoadType="0" Packed="False" />
       <Resource Name="Scenes/AZUL/Main" LoadType="0" Packed="False" />
       <Resource Name="Scenes/AZUL/Menu" LoadType="0" Packed="False" />
-      <Resource Name="UI/UIForms/AZUL/GamePlayForm" LoadType="0" Packed="False" />
       <Resource Name="UI/UIForms/AZUL/MenuForm" LoadType="0" Packed="False" />
-      <Resource Name="UI/UIForms/AZUL/SettlementForm" LoadType="0" Packed="False" />
     </Resources>
     <Assets>
       <Asset Guid="0b85ab6a0a220ef4eb36de83de7094d3" ResourceName="Materials/AZUL/block_cyan_mat" />
@@ -63,7 +61,6 @@
       <Asset Guid="9be2e1e45f4edd74c8764538ad306b78" ResourceName="Localization/ChineseSimplified/Dictionaries/Default" />
       <Asset Guid="a0847bc65f8246c488deb3f6cfd35818" ResourceName="Materials/AZUL/table_mat" />
       <Asset Guid="abda2637aa76aa84a8bbd91a14941ec9" ResourceName="Entities/AZUL/ColoredPlaceTokenArea" />
-      <Asset Guid="b3fdbd87196c6e64eaac7510d81f24a3" ResourceName="UI/UIForms/AZUL/SettlementForm" />
       <Asset Guid="befbcd9bcb4fdbd44a2373245bac99aa" ResourceName="Entities/AZUL/Board" />
       <Asset Guid="c56a847626ef94549b12a5e54e9920fe" ResourceName="Scenes/AZUL/Main" />
       <Asset Guid="c9685146d470e0546a09d6e0101e2794" ResourceName="Materials/AZUL/block_red_mat" />
@@ -73,7 +70,6 @@
       <Asset Guid="df9c5ced35dd54c40b3f2fe505e34eff" ResourceName="DataTables/AZUL/Entity" />
       <Asset Guid="dff0f3c694474f647adcf3843115648e" ResourceName="Materials/AZUL/board_mat" />
       <Asset Guid="e5e954be984d089498602437ee67d116" ResourceName="Materials/AZUL/AreaMat/area_black_mat" />
-      <Asset Guid="f1bc3bff215eb534599bb9c48cc05529" ResourceName="UI/UIForms/AZUL/GamePlayForm" />
       <Asset Guid="f8c6a65dc28108b40ab79a0eb8c35fc4" ResourceName="Materials/AZUL/block_blue_mat" />
       <Asset Guid="fefe4d72e1f90eb4fa81c7cb8b0fdf42" ResourceName="Entities/AZUL/PieceToken" />
     </Assets>

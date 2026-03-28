@@ -1,3 +1,4 @@
+using GameFramework.Event;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,6 +11,7 @@ namespace AZUL
         private BoardGameComponent m_BoardGameComponent = null;
 
         private bool m_FinalSettle = false;
+        private bool m_ResetGame = false;
 
         protected override void OnInit(ProcedureOwner procedureOwner)
         {
@@ -19,17 +21,25 @@ namespace AZUL
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
+            GameEntry.Event.Subscribe(GameResetEventArgs.EventId, OnGameReset);
 
             m_BoardGameComponent = GameEntry.BoardGame;
             m_BoardGameComponent.CanInteractive = false;
             m_FinalSettle = false;
+            m_ResetGame = false;
 
             GameEntry.Referee.ShowTip("检测到有玩家达成胜利条件,进行最终结算...");
+        }
+
+        private void OnGameReset(object sender, GameEventArgs e)
+        {
+            m_ResetGame = true;
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
             base.OnLeave(procedureOwner, isShutdown);
+            GameEntry.Event.Unsubscribe(GameResetEventArgs.EventId, OnGameReset);
         }
 
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
@@ -44,6 +54,11 @@ namespace AZUL
                 {
                     ChangeState<ProcedureGameSettlePanel>(procedureOwner);
                 }
+            }
+
+            if (m_ResetGame)
+            {
+                ChangeState<ProcedureGameReset>(procedureOwner);
             }
         }
     }

@@ -1,5 +1,6 @@
 using GameFramework.Event;
 using StarForce;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,12 +11,7 @@ namespace AZUL
 {
     public class ProcedureMain : ProcedureBase
     {
-        private bool m_StartGame = false;
-        private GamePlayForm m_GamePlayForm = null;
-        public void StartGame()
-        {
-            m_StartGame=true;
-        }
+        private bool m_ResetGame = false;
 
         protected override void OnInit(ProcedureOwner procedureOwner)
         {
@@ -30,47 +26,34 @@ namespace AZUL
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
-            GameEntry.Event.Subscribe(OpenUIFormSuccessEventArgs.EventId, OnOpenUIFormSuccess);
+            GameEntry.Event.Subscribe(GameResetEventArgs.EventId, OnGameReset);
 
-            m_StartGame = false;
-            GameEntry.UI.OpenUIForm((int)UIFormId.GamePlayForm, this);
+            m_ResetGame = false;
 
             //初始化裁判
             GameEntry.Referee.GameInit();
             GameEntry.Referee.ShowTip("欢迎来到AZUL! 准备好了吗?");
         }
 
+        private void OnGameReset(object sender, GameEventArgs e)
+        {
+            m_ResetGame=true;
+        }
+
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
             base.OnLeave(procedureOwner, isShutdown);
-            GameEntry.Event.Unsubscribe(OpenUIFormSuccessEventArgs.EventId, OnOpenUIFormSuccess);
-
-            if (m_GamePlayForm != null)
-            {
-                m_GamePlayForm.Close(isShutdown);
-                m_GamePlayForm = null;
-            }
+            GameEntry.Event.Unsubscribe(GameResetEventArgs.EventId, OnGameReset);
         }
 
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
 
-            if (m_StartGame)
+            if (m_ResetGame)
             {
                 ChangeState<ProcedureGameReset>(procedureOwner);
             }
-        }
-
-        private void OnOpenUIFormSuccess(object sender, GameEventArgs e)
-        {
-            OpenUIFormSuccessEventArgs ne = (OpenUIFormSuccessEventArgs)e;
-            if (ne.UserData != this)
-            {
-                return;
-            }
-
-            m_GamePlayForm = (GamePlayForm)ne.UIForm.Logic;
         }
     }
 }

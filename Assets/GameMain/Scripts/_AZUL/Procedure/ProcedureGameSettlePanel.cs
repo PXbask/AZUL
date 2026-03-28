@@ -1,3 +1,4 @@
+using GameFramework;
 using GameFramework.Event;
 using StarForce;
 using System.Collections;
@@ -10,8 +11,7 @@ namespace AZUL
 {
     public class ProcedureGameSettlePanel : ProcedureBase
     {
-        private SettlementForm m_SettlementForm = null;
-        private bool m_RestartGame = false;
+        private bool m_ResetGame = false;
         protected override void OnInit(ProcedureOwner procedureOwner)
         {
             base.OnInit(procedureOwner);
@@ -25,46 +25,50 @@ namespace AZUL
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
-            GameEntry.Event.Subscribe(OpenUIFormSuccessEventArgs.EventId, OnOpenUIFormSuccess);
-            m_RestartGame = false;
-            GameEntry.UI.OpenUIForm((int)UIFormId.SettlementForm, this);
+            GameEntry.Event.Subscribe(GameResetEventArgs.EventId, OnGameReset);
+            m_ResetGame = false;
+
+            ShowWinner();
+        }
+
+        private void OnGameReset(object sender, GameEventArgs e)
+        {
+            m_ResetGame = true;
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
             base.OnLeave(procedureOwner, isShutdown);
-            GameEntry.Event.Unsubscribe(OpenUIFormSuccessEventArgs.EventId, OnOpenUIFormSuccess);
-
-            if (m_SettlementForm != null)
-            {
-                m_SettlementForm.Close(true);  // 传入 true，立即关闭，跳过淡出动画
-                m_SettlementForm = null;
-            }
+            GameEntry.Event.Unsubscribe(GameResetEventArgs.EventId, OnGameReset);
         }
 
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
-            if (m_RestartGame)
+            if (m_ResetGame)
             {
                 ChangeState<ProcedureGameReset>(procedureOwner);
             }
         }
 
-        public void RestartGame()
+        public void ShowWinner()
         {
-            m_RestartGame=true;
-        }
-
-        private void OnOpenUIFormSuccess(object sender, GameEventArgs e)
-        {
-            OpenUIFormSuccessEventArgs ne = (OpenUIFormSuccessEventArgs)e;
-            if (ne.UserData != this)
+            var winner = GameEntry.BoardGame.GetWinner();
+            if (winner == null)
             {
-                return;
+                GameEntry.Referee.ShowTip("双方平局");
             }
-
-            m_SettlementForm = (SettlementForm)ne.UIForm.Logic;
+            else
+            {
+                if (winner.camp == PlaceAreaCamp.Self)
+                {
+                    GameEntry.Referee.ShowTip(Utility.Text.Format("你赢了!最终得分{0}分", winner.Score));
+                }
+                else
+                {
+                    GameEntry.Referee.ShowTip(Utility.Text.Format("对手赢了!最终得分{0}分", winner.Score));
+                }
+            }
         }
     }
 }

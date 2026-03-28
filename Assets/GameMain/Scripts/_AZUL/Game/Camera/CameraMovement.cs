@@ -8,11 +8,11 @@ namespace AZUL
     {
         [Header("移动设置")]
         [SerializeField]
-        private float m_MoveSpeed = 10f;
+        private float m_MoveSpeed = 40f;
 
         [Header("缩放设置")]
         [SerializeField]
-        private float m_ScrollSpeed = 2f;
+        private float m_ScrollSpeed = 10f;
 
         [SerializeField]
         private float m_MinOrthoSize = 1f;
@@ -22,7 +22,7 @@ namespace AZUL
 
         [Header("旋转设置")]
         [SerializeField]
-        private float m_RotationSpeed = 100f;
+        private float m_RotationSpeed = 400f;
 
         [SerializeField]
         private float m_MinPitch = -80f;
@@ -33,6 +33,8 @@ namespace AZUL
         private Camera m_Camera;
         private float m_CurrentPitch = 0f;
         private float m_CurrentYaw = 0f;
+
+        public bool FunctionActive { get; set; } = false;
 
         private void Start()
         {
@@ -52,6 +54,7 @@ namespace AZUL
 
         private void Update()
         {
+            if (!FunctionActive) return;
             HandleMovement();
             HandleZoom();
             HandleRotation();

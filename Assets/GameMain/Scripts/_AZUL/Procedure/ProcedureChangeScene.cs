@@ -79,14 +79,15 @@ namespace AZUL
                 return;
             }
 
-            if (m_ChangeToMenu)
-            {
-                ChangeState<ProcedureMenu>(procedureOwner);
-            }
-            else
-            {
-                ChangeState<ProcedureMain>(procedureOwner);
-            }
+            //if (m_ChangeToMenu)
+            //{
+            //    ChangeState<ProcedureMenu>(procedureOwner);
+            //}
+            //else
+            //{
+            //    ChangeState<ProcedureMenu>(procedureOwner);
+            //}
+            ChangeState<ProcedureMenu>(procedureOwner);
         }
 
         private void OnLoadSceneSuccess(object sender, GameEventArgs e)

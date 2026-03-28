@@ -10,6 +10,8 @@ namespace AZUL
 {
     public class ProcedureMenu : ProcedureBase
     {
+        private BoardGameComponent m_BoardGameComponent = null;
+
         private bool m_StartGame = false;
 
         private MenuForm m_MenuForm = null;
@@ -22,6 +24,8 @@ namespace AZUL
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
+            m_BoardGameComponent = GameEntry.BoardGame;
+
             GameEntry.Event.Subscribe(OpenUIFormSuccessEventArgs.EventId, OnOpenUIFormSuccess);
 
             m_StartGame = false;
@@ -33,12 +37,6 @@ namespace AZUL
             base.OnLeave(procedureOwner, isShutdown);
 
             GameEntry.Event.Unsubscribe(OpenUIFormSuccessEventArgs.EventId, OnOpenUIFormSuccess);
-
-            if (m_MenuForm != null)
-            {
-                m_MenuForm.Close(true);  // 传入 true，立即关闭，跳过淡出动画
-                m_MenuForm = null;
-            }
         }
 
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
@@ -47,9 +45,21 @@ namespace AZUL
 
             if (m_StartGame)
             {
-                procedureOwner.SetData<VarInt32>("NextSceneId", GameEntry.Config.GetInt("Scene.Main"));
+                //procedureOwner.SetData<VarInt32>("NextSceneId", GameEntry.Config.GetInt("Scene.Main"));
                 //procedureOwner.SetData<VarByte>("GameMode", (byte)GameMode.Survival);
-                ChangeState<ProcedureChangeScene>(procedureOwner);
+                //ChangeState<ProcedureChangeScene>(procedureOwner);
+                m_StartGame = false;
+                m_BoardGameComponent.GameInit();
+                m_BoardGameComponent.MoveCameraAnimWhenStartGame(() =>
+                {
+                    ChangeState<ProcedureMain>(procedureOwner);
+                });
+
+                if (m_MenuForm != null)
+                {
+                    m_MenuForm.Close();  // 传入 true，立即关闭，跳过淡出动画
+                    m_MenuForm = null;
+                }
             }
         }
 

@@ -12,6 +12,7 @@ namespace AZUL
         private BoardGameComponent m_BoardGameComponent = null;
 
         private bool m_ShouldChange = false;
+        private bool m_ResetGame = false;
         protected override void OnInit(ProcedureOwner procedureOwner)
         {
             base.OnInit(procedureOwner);
@@ -23,11 +24,18 @@ namespace AZUL
             m_BoardGameComponent = GameEntry.BoardGame;
             m_BoardGameComponent.CanInteractive = true;
             m_ShouldChange = false;
+            m_ResetGame = false;
 
             // 订阅棋子移动完成事件
             GameEntry.Event.Subscribe(MovePieceCompleteEventArgs.EventId, OnMovePieceComplete);
+            GameEntry.Event.Subscribe(GameResetEventArgs.EventId, OnGameReset);
 
             GameEntry.Referee.ShowTip("现在是对手的回合");
+        }
+
+        private void OnGameReset(object sender, GameEventArgs e)
+        {
+            m_ResetGame = true;
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
@@ -37,6 +45,7 @@ namespace AZUL
             // 取消订阅棋子移动完成事件
             if (GameEntry.Event != null)
             {
+                GameEntry.Event.Unsubscribe(GameResetEventArgs.EventId, OnGameReset);
                 GameEntry.Event.Unsubscribe(MovePieceCompleteEventArgs.EventId, OnMovePieceComplete);
             }
         }
@@ -62,6 +71,11 @@ namespace AZUL
                 {
                     ChangeState<ProcedureGameOtherRound>(procedureOwner);
                 }
+            }
+
+            if (m_ResetGame)
+            {
+                ChangeState<ProcedureGameReset>(procedureOwner);
             }
         }
 

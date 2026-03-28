@@ -1,3 +1,4 @@
+using GameFramework.Event;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,6 +12,8 @@ namespace AZUL
 
         private bool m_DealCompleted = false;
 
+        private bool m_ResetGame = false;
+
         protected override void OnInit(ProcedureOwner procedureOwner)
         {
             base.OnInit(procedureOwner);
@@ -20,15 +23,24 @@ namespace AZUL
         {
             base.OnEnter(procedureOwner);
 
+            GameEntry.Event.Subscribe(GameResetEventArgs.EventId, OnGameReset);
+
             m_BoardGameComponent = GameEntry.BoardGame;
             m_DealCompleted = false;
+            m_ResetGame = false;
 
             GameEntry.Referee.ShowTip("发牌中...");
+        }
+
+        private void OnGameReset(object sender, GameEventArgs e)
+        {
+            m_ResetGame = true;
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
             base.OnLeave(procedureOwner, isShutdown);
+            GameEntry.Event.Unsubscribe(GameResetEventArgs.EventId, OnGameReset);
         }
 
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
@@ -50,6 +62,11 @@ namespace AZUL
                         ChangeState<ProcedureGameOtherRound>(procedureOwner);
                     }
                 }
+            }
+
+            if (m_ResetGame)
+            {
+                ChangeState<ProcedureGameReset>(procedureOwner);
             }
         }
     }
