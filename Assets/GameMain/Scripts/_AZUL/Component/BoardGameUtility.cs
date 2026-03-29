@@ -272,7 +272,8 @@ namespace AZUL
         /// <returns></returns>
         public static int CalculateScorePieceMoveToColoredArea(PlayerBoard playerBoard, ColoredPlaceTokenArea coloredPlaceTokenArea)
         {
-            int score = 0;
+            int continuousRow = 0;
+            int continuousCol = 0;
             var data = coloredPlaceTokenArea.GetPositionData();
             //先计算竖排,计算上下组成的最大的连续棋子数
             for(int i = data.Row - 1; i >= 0; i--)
@@ -282,7 +283,7 @@ namespace AZUL
                 {
                     break;
                 }
-                score++;
+                continuousRow++;
             }
             for (int i = data.Row; i < playerBoard.RightPlaceTokenAreas.Count; i++)
             {
@@ -291,7 +292,7 @@ namespace AZUL
                 {
                     break;
                 }
-                score++;
+                continuousRow++;
             }
 
             //再计算横排
@@ -302,7 +303,7 @@ namespace AZUL
                 {
                     break;
                 }
-                score++;
+                continuousCol++;
             }
             for(int i = data.Column; i < playerBoard.RightPlaceTokenAreas[data.Row].Areas.Count; i++)
             {
@@ -311,10 +312,20 @@ namespace AZUL
                 {
                     break;
                 }
-                score++;
+                continuousCol++;
             }
 
-            return score;
+            //如果是单独的一个棋子，则得1分
+            if(continuousCol == 1)
+            {
+                return continuousRow;
+            }
+            if(continuousRow == 1)
+            {
+                return continuousCol;
+            }
+
+            return continuousRow + continuousCol;
         }
 
         /// <summary>

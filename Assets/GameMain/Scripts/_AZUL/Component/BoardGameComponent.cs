@@ -314,7 +314,7 @@ namespace AZUL
             }
 
             var tmpPlayer = CurrentPlayer;
-            ChangePlayer();
+            SwitchPlayer();
             GameEntry.Event.Fire(this, MovePieceCompleteEventArgs.Create(null, null, null, tmpPlayer));
             ClearSelectedPieceToken();
         }
@@ -608,7 +608,7 @@ namespace AZUL
             }
         }
 
-        private void ChangePlayer()
+        private void SwitchPlayer()
         {
             if (CurrentPlayer == PlaceAreaCamp.Self)
             {
@@ -685,6 +685,9 @@ namespace AZUL
                     //如果是首位token，放回中间区域，否则放入弃牌区
                     if(loseArea.Token.PieceTokenData.ColorType == PieceColorType.SpecialToken)
                     {
+                        //谁拥有首位token，下一回合就是谁的先手
+                        CurrentPlayer = camp;
+
                         var midArea = BoardGameUtility.GetEmptyTokenAreaInMidArea(1);
                         if(midArea.Count > 0)
                         {

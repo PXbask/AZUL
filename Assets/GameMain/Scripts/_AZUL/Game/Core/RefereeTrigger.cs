@@ -50,7 +50,14 @@ namespace AZUL
         {
             if (m_MainCamera != null && m_Canvas != null)
             {
-                m_Canvas.transform.rotation = m_MainCamera.transform.rotation;
+                //高度与相机平齐
+                //var pos = m_Canvas.transform.position;
+                //pos.y = m_MainCamera.transform.position.y;
+                //m_Canvas.transform.position = pos;
+
+                //只绕y轴旋转
+                var rot = m_MainCamera.transform.rotation.eulerAngles;
+                m_Canvas.transform.rotation = Quaternion.Euler(0, rot.y, 0);
             }
         }
 
