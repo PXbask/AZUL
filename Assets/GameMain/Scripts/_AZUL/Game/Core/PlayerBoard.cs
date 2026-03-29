@@ -12,6 +12,10 @@ namespace AZUL
 
         public PlaceAreaCamp camp;
 
+        public ScorePieceToken ScorePieceToken;
+
+        public List<ScorePlaceTokenArea> ScorePlaceTokenAreas = new List<ScorePlaceTokenArea>();
+
         /// <summary>
         /// 左侧放置区域（使用包装类支持 Inspector 序列化）
         /// </summary>
@@ -37,6 +41,7 @@ namespace AZUL
                 m_Score = value;
                 if (scoreText != null)
                 {
+                    GameEntry.BoardGame.MoveScoreTokenToArea(ScorePieceToken, ScorePlaceTokenAreas[m_Score]);
                     scoreText.text = $"当前分数:{m_Score}";
                 }
             }
@@ -44,6 +49,8 @@ namespace AZUL
 
         private void Start()
         {
+            ScorePieceToken = null;
+
             if (isSelfPlayer)
             {
                 camp = PlaceAreaCamp.Self;
@@ -76,11 +83,18 @@ namespace AZUL
                 area.Camp = camp;
                 area.PositionGroup = PlaceTokenPosition.Lose;
             }
+
+            foreach (var area in ScorePlaceTokenAreas)
+            {
+                area.Camp = camp;
+                area.PositionGroup = PlaceTokenPosition.Score;
+            }
         }
 
         public void GameReset()
         {
             Score = 0;
+            ScorePieceToken = null;
         }
 
         /// <summary>

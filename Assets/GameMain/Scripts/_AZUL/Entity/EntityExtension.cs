@@ -42,6 +42,11 @@ namespace AZUL
             entityComponent.ShowEntity(typeof(PieceToken), "PieceToken", 0, data);
         }
 
+        public static void ShowScorePieceToken(this EntityComponent entityComponent, ScorePieceTokenData data)
+        {
+            entityComponent.ShowEntity(typeof(ScorePieceToken), "ScorePieceToken", 0, data);
+        }
+
         private static void ShowEntity(this EntityComponent entityComponent, Type logicType, string entityGroup, int priority, EntityData data)
         {
             if (data == null)

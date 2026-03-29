@@ -60,7 +60,7 @@ namespace AZUL
             m_PieceTokenData = userData as PieceTokenData;
             if (m_PieceTokenData == null)
             {
-                Log.Error("PieceToken data is invalid.");
+                //Log.Error("PieceToken data is invalid.");
                 return;
             }
 
@@ -95,7 +95,7 @@ namespace AZUL
             }
         }
 
-        public void OnSelected()
+        public virtual void OnSelected()
         {
             //表现：向上移动一定距离
             var area = OwnerPlaceTokenArea;
@@ -112,7 +112,7 @@ namespace AZUL
             }
         }
 
-        public void OnDeselected()
+        public virtual void OnDeselected()
         {
             var area = OwnerPlaceTokenArea;
             if (area != null)

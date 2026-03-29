@@ -390,6 +390,18 @@ namespace AZUL
                 return;
             }
 
+            //生成分数token
+            if(m_SelfBoard.ScorePieceToken == null)
+            {
+                var zeroScoreArea_self = BoardGameUtility.GetScorePlaceTokenArea(m_SelfBoard, 0);
+                SpawnScorePieceAndPlace(zeroScoreArea_self);
+            }
+            if (m_OtherBoard.ScorePieceToken == null)
+            {
+                var zeroScoreArea_other = BoardGameUtility.GetScorePlaceTokenArea(m_OtherBoard, 0);
+                SpawnScorePieceAndPlace(zeroScoreArea_other);
+            }
+
             if (RemainPieceIds.Remove(0))  // 假设0是一个特殊的棋子ID，代表空棋子或占位符，不需要发牌
             {
                 SpawnPieceAndPlace(0, GetRemainSlotFromMidDisk());
@@ -431,6 +443,29 @@ namespace AZUL
                     data.TargetArea.PlaceToken(pieceToken);
                 }
             }
+
+            // 如果需要处理其他类型的实体，可以在这里添加更多的条件分支
+            if (ne.EntityLogicType == typeof(ScorePieceToken))
+            {
+                ScorePieceToken pieceToken = (ScorePieceToken)ne.Entity.Logic;
+                ScorePieceTokenData data = (ScorePieceTokenData)ne.UserData;
+
+                Log.Info("ScorePieceToken created successfully. EntityId: {0}, TypeId: {1}", pieceToken.Id, data.TypeId);
+                // 如果需要将棋子放置到特定区域
+                if (data.TargetArea != null)
+                {
+                    data.TargetArea.PlaceToken(pieceToken);
+                }
+                //指定玩家的分数token
+                 if (data.TargetArea.Camp == PlaceAreaCamp.Self)
+                {
+                    m_SelfBoard.ScorePieceToken = pieceToken;
+                }
+                else if (data.TargetArea.Camp == PlaceAreaCamp.Other)
+                {
+                    m_OtherBoard.ScorePieceToken = pieceToken;
+                }
+            }
         }
 
         /// <summary>
@@ -440,6 +475,16 @@ namespace AZUL
         {
             int entityId = GameEntry.Entity.GenerateSerialId();
             GameEntry.Entity.ShowPieceToken(new PieceTokenData(entityId, pieceId)
+            {
+                Position = m_PieceBag.position,
+                TargetArea = placeTokenArea,  // 保存目标区域，在事件回调中使用
+            });
+        }
+
+        private void SpawnScorePieceAndPlace(ScorePlaceTokenArea placeTokenArea)
+        {
+            int entityId = GameEntry.Entity.GenerateSerialId();
+            GameEntry.Entity.ShowScorePieceToken(new ScorePieceTokenData(entityId)
             {
                 Position = m_PieceBag.position,
                 TargetArea = placeTokenArea,  // 保存目标区域，在事件回调中使用
@@ -765,6 +810,20 @@ namespace AZUL
                     // 隐藏实体
                     GameEntry.Entity.HideEntity(pieceToken);
                 }
+
+                var scorePieceToken = entity.GetComponent<ScorePieceToken>();
+                if (scorePieceToken)
+                {
+                    // 清除棋子与放置区域的关联
+                    if (scorePieceToken.OwnerPlaceTokenArea != null)
+                    {
+                        scorePieceToken.OwnerPlaceTokenArea.RemoveToken();
+                        scorePieceToken.OwnerPlaceTokenArea = null;
+                    }
+
+                    // 隐藏实体
+                    GameEntry.Entity.HideEntity(scorePieceToken);
+                }
             }
 
             Log.Info("Cleared all piece tokens. Total entities: {0}", allEntities.Length);
@@ -792,6 +851,14 @@ namespace AZUL
         {
             var movement = m_MainCamera.GetComponent<CameraMovement>();
             movement.FunctionActive = active;
+        }
+
+        public void MoveScoreTokenToArea(ScorePieceToken scorePieceToken, ScorePlaceTokenArea targetArea)
+        {
+            if (scorePieceToken != null && targetArea != null)
+            {
+                targetArea.PlaceToken(scorePieceToken);
+            }
         }
     }
 }

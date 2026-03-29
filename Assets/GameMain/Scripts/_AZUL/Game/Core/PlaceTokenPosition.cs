@@ -12,5 +12,6 @@ namespace AZUL
         Lose = 2,
         Factory = 3,
         MidTable = 4,
+        Score,
     }
 }

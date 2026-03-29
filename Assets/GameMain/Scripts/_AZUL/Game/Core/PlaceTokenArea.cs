@@ -5,12 +5,51 @@ using DG.Tweening;
 
 namespace AZUL
 {
-    public class PlaceTokenArea : MonoBehaviour
+    public interface IPlaceTokenArea
+    {
+        /// <summary>
+        /// 表明区域的位置信息,位于哪块区域
+        /// </summary>
+        PlaceTokenPosition PositionGroup { get; set; }
+
+        /// <summary>
+        /// 区域的阵营信息,表明该区域属于哪个玩家
+        /// </summary>
+        PlaceAreaCamp Camp { get; set; }
+
+        /// <summary>
+        /// 上面的棋子需要放置的位置
+        /// </summary>
+        Vector3 PlaceDestination { get; }
+        
+        /// <summary>
+        /// 获取上面的棋子
+        /// </summary>
+        PieceToken Token { get; }
+
+        /// <summary>
+        /// 判断该区域是否为空
+        /// </summary>
+        /// <returns></returns>
+        bool IsEmpty();
+
+        /// <summary>
+        /// 获取详细的位置信息,包含所在区域,行列信息
+        /// </summary>
+        /// <returns></returns>
+        PlaceTokenAreaPosition GetPositionData();
+
+        /// <summary>
+        /// 移除上面的棋子
+        /// </summary>
+        void RemoveToken();
+    }
+    public class PlaceTokenArea : MonoBehaviour, IPlaceTokenArea
     {
         [SerializeField]
         protected PieceToken token;
 
-        public PieceToken Token { get { return token; } }
+        public PieceToken Token => token;
 
         [SerializeField]
         protected PlaceTokenPosition positionGroup;
@@ -76,7 +115,7 @@ namespace AZUL
             };
         }
 
-        public void RemoveToken()
+        public virtual void RemoveToken()
         {
             token = null;
         }

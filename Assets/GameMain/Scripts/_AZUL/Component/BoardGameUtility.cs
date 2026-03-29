@@ -350,7 +350,7 @@ namespace AZUL
         public static void PlayerAddScore(PlayerBoard playerBoard, int score)
         {
             if (playerBoard == null) return;
-            playerBoard.Score += score;
+            playerBoard.Score = Mathf.Clamp(playerBoard.Score+score, 0, 100);
         }
 
         /// <summary>
@@ -469,6 +469,19 @@ namespace AZUL
             }
 
             return filledRowNum * 2 + filledColNum * 7 + filledColorNum * 10;
+        }
+
+        /// <summary>
+        /// 获取分数区对应分数的放置区，如果分数越界则返回null
+        /// </summary>
+        /// <param name="board"></param>
+        /// <param name="score"></param>
+        /// <returns></returns>
+        public static ScorePlaceTokenArea GetScorePlaceTokenArea(PlayerBoard board, int score)
+        {
+            int maxScore = board.ScorePlaceTokenAreas.Count - 1;
+            if (score < 0 || score > maxScore) return null;
+            return board.ScorePlaceTokenAreas[score];
         }
     }
 }
