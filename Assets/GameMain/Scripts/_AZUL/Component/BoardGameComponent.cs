@@ -267,7 +267,8 @@ namespace AZUL
                         {
                             //需要把首位token放入减分区
                             var loseAreas_fiestToken = BoardGameUtility.GetEmptyTokenAreaInLoseArea(GetBoardWithCurrentComp());
-                            MovePieceToSubLoseArea(new List<PieceToken> { firstToken }, loseAreas_fiestToken);
+                            //MovePieceToSubLoseArea(new List<PieceToken> { firstToken }, loseAreas_fiestToken);
+                            MoveFirstTokenToSub(firstToken);
                         }
                         var allSameColorTokens = BoardGameUtility.GetAllColorTypeTokenInMidTable(pieceToken);
                         var leftAreas = BoardGameUtility.GetEmptyTokenAreaInManualAreaInRow(GetBoardWithCurrentComp(), posData.Row);
@@ -304,7 +305,8 @@ namespace AZUL
                         {
                             //需要把首位token放入减分区
                             var loseAreas_fiestToken = BoardGameUtility.GetEmptyTokenAreaInLoseArea(GetBoardWithCurrentComp());
-                            MovePieceToSubLoseArea(new List<PieceToken> { firstToken }, loseAreas_fiestToken);
+                            //MovePieceToSubLoseArea(new List<PieceToken> { firstToken }, loseAreas_fiestToken);
+                            MoveFirstTokenToSub(firstToken);
                         }
                         var allSameColorTokens = BoardGameUtility.GetAllColorTypeTokenInMidTable(pieceToken);
                         var loseAreas = BoardGameUtility.GetEmptyTokenAreaInLoseArea(GetBoardWithCurrentComp());
@@ -650,6 +652,31 @@ namespace AZUL
                 {
                     LosePiece(allSameColorTokens[i]);
                 }
+            }
+        }
+
+        /// <summary>
+        /// 将首位token放入减分区，如果减分区没有位置则替换最后一个
+        /// </summary>
+        /// <param name="token"></param>
+        public void MoveFirstTokenToSub(PieceToken token)
+        {
+            var loseAreas = BoardGameUtility.GetEmptyTokenAreaInLoseArea(GetBoardWithCurrentComp());
+            if(loseAreas.Count == 0)
+            {
+                var area = BoardGameUtility.GetLastAreaInLoseArea(GetBoardWithCurrentComp());
+                if (area != null)
+                {
+                    if(area.Token != null)
+                    {
+                        LosePiece(area.Token);
+                        area.PlaceToken(token);
+                    }
+                }
+            }
+            else
+            {
+                MovePieceToSubLoseArea(new List<PieceToken>() { token}, loseAreas);
             }
         }
 

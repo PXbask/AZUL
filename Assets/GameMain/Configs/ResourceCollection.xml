@@ -10,9 +10,13 @@
       <Resource Name="DataTables/AZUL/UIForm" LoadType="0" Packed="False" />
       <Resource Name="Entities/AZUL/Board" LoadType="0" Packed="False" />
       <Resource Name="Entities/AZUL/ColoredPlaceTokenArea" LoadType="0" Packed="False" />
+      <Resource Name="Entities/AZUL/FactoryDisk" LoadType="0" Packed="False" />
       <Resource Name="Entities/AZUL/LosePlaceTokenArea_0" LoadType="0" Packed="False" />
       <Resource Name="Entities/AZUL/PieceToken" LoadType="0" Packed="False" />
       <Resource Name="Entities/AZUL/PlaceTokenArea" LoadType="0" Packed="False" />
+      <Resource Name="Entities/AZUL/ScorePieceToken" LoadType="0" Packed="False" />
+      <Resource Name="Entities/AZUL/ScorePlaceTokenArea" LoadType="0" Packed="False" />
+      <Resource Name="Entities/AZUL/Table" LoadType="0" Packed="False" />
       <Resource Name="Fonts/MainFont" LoadType="0" Packed="False" />
       <Resource Name="Localization/ChineseSimplified/Dictionaries/Default" LoadType="0" Packed="False" />
       <Resource Name="Localization/ChineseTraditional/Dictionaries/Default" LoadType="0" Packed="False" />
@@ -42,9 +46,11 @@
       <Asset Guid="1053b0070685be347ab58587156842dc" ResourceName="Localization/ChineseTraditional/Dictionaries/Default" />
       <Asset Guid="138f9c416ace5fb4d9bc127c4f8bf1be" ResourceName="Materials/AZUL/AreaMat/area_red_mat" />
       <Asset Guid="14869ac0d4433f04db1704e39d03412e" ResourceName="Localization/English/Dictionaries/Default" />
+      <Asset Guid="1a5d878b09c8db24db461b5b9b331785" ResourceName="Entities/AZUL/Table" />
       <Asset Guid="236f84353498fe44988721baec361eee" ResourceName="Configs/AZUL/DefaultConfig" />
       <Asset Guid="2a8b2a747493690499762c9e8a8a28ae" ResourceName="Materials/AZUL/AreaMat/area_blue_mat" />
       <Asset Guid="39a4ec15cc45f6e4d904433149db638f" ResourceName="Materials/AZUL/AreaMat/area_block_mat" />
+      <Asset Guid="4231f60b96cc169448001d22a9be47ab" ResourceName="Entities/AZUL/ScorePlaceTokenArea" />
       <Asset Guid="43db341b6250e4f448a1a6e47d446521" ResourceName="DataTables/AZUL/Piece" />
       <Asset Guid="45142f50a41f7314194828cc46adcc67" ResourceName="Materials/AZUL/AreaMat/area_yellow_mat" />
       <Asset Guid="4575c9db579d9ce46a7d04c0fe7b31bb" ResourceName="Materials/AZUL/AreaMat/area_lose_mat" />
@@ -52,6 +58,7 @@
       <Asset Guid="5b471847f1e02524bb87731976c0893a" ResourceName="DataTables/AZUL/Scene" />
       <Asset Guid="5dcd89912e222bf4c87f76db4044bc5e" ResourceName="Localization/Korean/Dictionaries/Default" />
       <Asset Guid="6bbdb6f2eedca114b9cd7f3f3a386387" ResourceName="Materials/AZUL/block_yellow_mat" />
+      <Asset Guid="734529a4f57c9e240b7133d458052f6e" ResourceName="Entities/AZUL/FactoryDisk" />
       <Asset Guid="77cbb7c5404c10242ab59953e0746314" ResourceName="Fonts/MainFont" />
       <Asset Guid="79b64d63e4dd5f14cb6fbf736cce105f" ResourceName="Entities/AZUL/PlaceTokenArea" />
       <Asset Guid="81efa18569f194e4b80d7427e67116ac" ResourceName="Materials/AZUL/block_purpule_mat" />
@@ -60,6 +67,7 @@
       <Asset Guid="985e804d6a2d1444eaee85a3d3510848" ResourceName="Materials/AZUL/AreaMat/area_cyan_mat" />
       <Asset Guid="9be2e1e45f4edd74c8764538ad306b78" ResourceName="Localization/ChineseSimplified/Dictionaries/Default" />
       <Asset Guid="a0847bc65f8246c488deb3f6cfd35818" ResourceName="Materials/AZUL/table_mat" />
+      <Asset Guid="a1f26bacea18882408a1aed0fbb744ff" ResourceName="Entities/AZUL/ScorePieceToken" />
       <Asset Guid="abda2637aa76aa84a8bbd91a14941ec9" ResourceName="Entities/AZUL/ColoredPlaceTokenArea" />
       <Asset Guid="befbcd9bcb4fdbd44a2373245bac99aa" ResourceName="Entities/AZUL/Board" />
       <Asset Guid="c56a847626ef94549b12a5e54e9920fe" ResourceName="Scenes/AZUL/Main" />

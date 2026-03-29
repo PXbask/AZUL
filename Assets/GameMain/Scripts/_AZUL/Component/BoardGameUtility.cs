@@ -139,6 +139,16 @@ namespace AZUL
         }
 
         /// <summary>
+        /// 获取减分区的最后一个区域
+        /// </summary>
+        /// <param name="board"></param>
+        /// <returns></returns>
+        public static LosePlaceTokenArea GetLastAreaInLoseArea(PlayerBoard board)
+        {
+            return board.LosePlaceTokenAreas[^1];
+        }
+
+        /// <summary>
         /// 获取中间区域count个空闲位置
         /// </summary>
         /// <param name="count"></param>
