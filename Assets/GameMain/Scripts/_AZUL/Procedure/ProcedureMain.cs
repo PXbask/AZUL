@@ -33,6 +33,9 @@ namespace AZUL
             //初始化裁判
             GameEntry.Referee.GameInit();
             GameEntry.Referee.ShowTip("欢迎来到AZUL! 准备好了吗?");
+
+            //GameEntry.AI.Run();
+            //GameEntry.AI.SendNetworkMessage("hello");
         }
 
         private void OnGameReset(object sender, GameEventArgs e)

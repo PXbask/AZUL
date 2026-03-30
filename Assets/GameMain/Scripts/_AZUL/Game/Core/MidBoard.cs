@@ -39,5 +39,32 @@ namespace AZUL
                 centerTokenArea.PositionGroup = PlaceTokenPosition.MidTable;
             }
         }
+
+        public List<List<PlaceTokenAreaData>> GetFactoriesData()
+        {
+            List<List<PlaceTokenAreaData>> factoriesData = new List<List<PlaceTokenAreaData>>();
+            foreach (var factoryDisk in FactoryDisks)
+            {
+                List<PlaceTokenAreaData> factoryData = new List<PlaceTokenAreaData>();
+                foreach (var area in factoryDisk.TokenAreas)
+                {
+                    PlaceTokenAreaData data = BoardGameUtility.GetPlaceTokenAreaData(area);
+                    factoryData.Add(data);
+                }
+                factoriesData.Add(factoryData);
+            }
+            return factoriesData;
+        }
+
+        public List<PlaceTokenAreaData> GetCenterData()
+        {
+            List<PlaceTokenAreaData> centerData = new List<PlaceTokenAreaData>();
+            foreach (var area in CenterTokenAreas)
+            {
+                PlaceTokenAreaData data = BoardGameUtility.GetPlaceTokenAreaData(area);
+                centerData.Add(data);
+            }
+            return centerData;
+        }
     }
 }

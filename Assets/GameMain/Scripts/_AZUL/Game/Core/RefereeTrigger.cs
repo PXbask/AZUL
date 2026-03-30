@@ -15,6 +15,9 @@ namespace AZUL
         private Button m_ResetButton = null;
 
         [SerializeField]
+        private Button m_ResetButtonWithAI = null;
+
+        [SerializeField]
         private Button m_QuitButton = null;
 
         private Camera m_MainCamera;
@@ -23,6 +26,7 @@ namespace AZUL
         {
             m_MainCamera = Camera.main;
             m_ResetButton.onClick.AddListener(OnClickReset);
+            m_ResetButtonWithAI.onClick.AddListener(OnClickResetWithAI);
             m_QuitButton.onClick.AddListener(OnClickQuit);
 
             m_Canvas.gameObject.SetActive(false);
@@ -63,6 +67,19 @@ namespace AZUL
 
         private void OnClickReset()
         {
+            if (GameEntry.AI.IsActive())
+            {
+                GameEntry.AI.Stop();
+            }
+            GameEntry.Event.Fire(this, GameResetEventArgs.Create());
+        }
+
+        private void OnClickResetWithAI()
+        {
+            if (!GameEntry.AI.IsActive())
+            {
+                GameEntry.AI.Run();
+            }
             GameEntry.Event.Fire(this, GameResetEventArgs.Create());
         }
 

@@ -1,0 +1,69 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace AZUL
+{
+    [Serializable]
+    public class TableData
+    {
+        /// <summary>
+        /// 工厂圆盘信息
+        /// </summary>
+        public List<List<PlaceTokenAreaData>> factories;
+
+        /// <summary>
+        /// 中央区域信息
+        /// </summary>
+        public List<PlaceTokenAreaData> center;
+
+        /// <summary>
+        /// 当前要行动的那个人他所有版图信息
+        /// </summary>
+        public PlayerBoardData me;
+
+        /// <summary>
+        /// 其他人的版图信息
+        /// </summary>
+        public List<PlayerBoardData> opponents;
+    }
+
+    [Serializable]
+    public class PlayerBoardData
+    {
+        /// <summary>
+        /// 玩家当前分数
+        /// </summary>
+        public int score;
+
+        /// <summary>
+        /// 花砖列信息，顺序从上到下，从右到左
+        /// </summary>
+        public List<List<PlaceTokenAreaData>> manualAreas;
+
+        /// <summary>
+        /// 砖墙信息，顺序从上到下，从左到右
+        /// </summary>
+        public List<List<PlaceTokenAreaData>> coloredAreas;
+
+        /// <summary>
+        /// 地板列信息，从左到右
+        /// </summary>
+        public List<PlaceTokenAreaData> loseAreas;
+    }
+
+    [Serializable]
+    public class PlaceTokenAreaData
+    {
+        /// <summary>
+        /// 该区域是否为空
+        /// </summary>
+        public bool empty;
+
+        /// <summary>
+        /// 如果不为空，该区域的颜色
+        /// </summary>
+        public PieceColorType color;
+    }
+}

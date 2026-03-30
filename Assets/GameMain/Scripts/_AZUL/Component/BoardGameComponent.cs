@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityGameFramework.Runtime;
+using LitJson;
 
 namespace AZUL
 {
@@ -43,9 +44,26 @@ namespace AZUL
         public readonly int PlayerNum = 2;
         public readonly int FactoryDiskNum = 5;
 
-        public PlaceAreaCamp CurrentPlayer;
+        private PlaceAreaCamp m_CurrentPlayer;
+        public PlaceAreaCamp CurrentPlayer
+        {
+            get { return m_CurrentPlayer; }
+            set
+            { 
+                m_CurrentPlayer = value; 
+                if(value == PlaceAreaCamp.Other && FightwithAI)
+                {
+                    CanInteractive = false;
+                }
+                else
+                {
+                    CanInteractive = true;
+                }
+            }
+        }
 
         public bool CanInteractive { get; set; }
+        public bool FightwithAI => GameEntry.AI.IsActive();
 
         protected override void Awake()
         {
@@ -82,6 +100,22 @@ namespace AZUL
             if (Input.GetMouseButtonDown(0))
             {
                 HandleMouseClick();
+            }
+        }
+
+        public PlayerBoard GetPlayerBoard(PlaceAreaCamp camp)
+        {
+            if(camp == PlaceAreaCamp.Self)
+            {
+                return m_SelfBoard;
+            }
+            else if(camp == PlaceAreaCamp.Other)
+            {
+                return m_OtherBoard;
+            }
+            else
+            {
+                return null;
             }
         }
 
@@ -874,18 +908,45 @@ namespace AZUL
             }
         }
 
+        /// <summary>
+        /// 是否激活相机功能（包括旋转、缩放、移动等）
+        /// </summary>
+        /// <param name="active"></param>
         public void CameraFunctionActive(bool active)
         {
             var movement = m_MainCamera.GetComponent<CameraMovement>();
             movement.FunctionActive = active;
         }
 
+        /// <summary>
+        /// 移动分数token到指定区域
+        /// </summary>
+        /// <param name="scorePieceToken"></param>
+        /// <param name="targetArea"></param>
         public void MoveScoreTokenToArea(ScorePieceToken scorePieceToken, ScorePlaceTokenArea targetArea)
         {
             if (scorePieceToken != null && targetArea != null)
             {
                 targetArea.PlaceToken(scorePieceToken);
             }
+        }
+
+        public void SendCurrentBoardInfoToAIServer()
+        {
+            if(FightwithAI)
+            {
+                var tableData = BoardGameUtility.GetTableData();
+                string jsonString = LitJson.JsonMapper.ToJson(tableData);
+                Log.Info("Table Data JSON: {0}", jsonString);
+
+                // 发送 JSON 字符串到 AI 服务器
+                GameEntry.AI.SendNetworkMessage(jsonString);
+            }
+        }
+
+        public void ParseAIAction(string json)
+        {
+            //延时2秒执行，模拟AI思考时间
         }
     }
 }

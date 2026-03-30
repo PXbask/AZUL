@@ -199,6 +199,12 @@ namespace AZUL
             private set;
         }
 
+        public static AIComponent AI
+        {
+            get;
+            private set;
+        }
+
         private static void InitBuiltinComponents()
         {
             Base = UnityGameFramework.Runtime.GameEntry.GetComponent<BaseComponent>();
@@ -227,6 +233,7 @@ namespace AZUL
         {
             BoardGame = UnityGameFramework.Runtime.GameEntry.GetComponent<BoardGameComponent>();
             Referee = UnityGameFramework.Runtime.GameEntry.GetComponent<RefereeComponent>();
+            AI = UnityGameFramework.Runtime.GameEntry.GetComponent<AIComponent>();
         }
 
         private void Start()

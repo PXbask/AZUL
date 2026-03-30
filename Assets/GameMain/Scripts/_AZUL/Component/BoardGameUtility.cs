@@ -493,5 +493,25 @@ namespace AZUL
             if (score < 0 || score > maxScore) return null;
             return board.ScorePlaceTokenAreas[score];
         }
+
+        public static TableData GetTableData()
+        {
+            TableData resData = new TableData();
+            resData.factories = GameEntry.BoardGame.MidBoard.GetFactoriesData();
+            resData.center = GameEntry.BoardGame.MidBoard.GetCenterData();
+            resData.me = GameEntry.BoardGame.GetPlayerBoard(PlaceAreaCamp.Other).GetPlayerBoardData();
+            resData.opponents = new List<PlayerBoardData>();
+            resData.opponents.Add(GameEntry.BoardGame.GetPlayerBoard(PlaceAreaCamp.Self).GetPlayerBoardData());
+            return resData;
+        }
+
+        public static PlaceTokenAreaData GetPlaceTokenAreaData(PlaceTokenArea area)
+        {
+            return new PlaceTokenAreaData
+            {
+                empty = area.IsEmpty(),
+                color = area.IsEmpty() ? PieceColorType.SpecialToken : area.Token.PieceTokenData.ColorType
+            };
+        }
     }
 }
