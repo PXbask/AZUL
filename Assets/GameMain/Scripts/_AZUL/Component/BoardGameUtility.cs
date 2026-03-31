@@ -78,6 +78,33 @@ namespace AZUL
             return null;
         }
 
+        public static List<PieceToken> GetAllColorTypeTokenInFactory(PieceColorType colorType, int factoryId, out List<PieceToken> remainTokens)
+        {
+            var result = new List<PieceToken>();
+            remainTokens = new List<PieceToken>();
+            if(factoryId >=0 && factoryId < GameEntry.BoardGame.MidBoard.FactoryDisks.Count)
+            {
+                var factory = GameEntry.BoardGame.MidBoard.FactoryDisks[factoryId];
+                foreach (var area in factory.TokenAreas)
+                {
+                    if (!area.IsEmpty())
+                    {
+                        if (area.Token.PieceTokenData.ColorType == colorType)
+                        {
+                            result.Add(area.Token);
+                        }
+                        else
+                        {
+                            remainTokens.Add(area.Token);
+                        }
+                    }
+                }
+                return result;
+            }
+            Debug.LogError("棋子不在工厂区域内，无法获取相同颜色的棋子。");
+            return null;
+        }
+
         /// <summary>
         /// 获取与指定PieceToken颜色相同的所有PieceToken，这些PieceToken必须位于中部区域内。
         /// </summary>
@@ -94,6 +121,19 @@ namespace AZUL
                     {
                         result.Add(area.Token);
                     }
+                }
+            }
+            return result;
+        }
+
+        public static List<PieceToken> GetAllColorTypeTokenInMidTable(PieceColorType colorType)
+        {
+            var result = new List<PieceToken>();
+            foreach (var area in GameEntry.BoardGame.MidBoard.CenterTokenAreas)
+            {
+                if (!area.IsEmpty() && area.Token.PieceTokenData.ColorType == colorType)
+                {
+                    result.Add(area.Token);
                 }
             }
             return result;

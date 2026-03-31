@@ -684,7 +684,6 @@ MonoBehaviour:
   LostPieceIds: 
   m_Active: 0
   m_HasSubscribe: 0
-  CurrentPlayer: 0
 --- !u!1 &931788490
 GameObject:
   m_ObjectHideFlags: 0

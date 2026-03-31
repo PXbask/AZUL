@@ -6,7 +6,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityGameFramework.Runtime;
 
@@ -94,7 +93,7 @@ namespace AZUL
     public class AINetwork
     {
         private static readonly string SERVER_IP = "127.0.0.1";
-        private static readonly int SERVER_PORT = 8888;
+        private static readonly int SERVER_PORT = 9999;
         private static readonly int BUFFER_SIZE = 4096;
 
         // 发送给AI服务器的消息队列
@@ -240,7 +239,7 @@ namespace AZUL
                         Log.Info($"收到AI服务器消息: {message}");
 
                         // 触发消息接收事件（在主线程处理）
-                        GameEntry.BoardGame.ParseAIAction(message);
+                        GameEntry.Event.Fire(this, ReceiveAIServerMsgEventArgs.Create(message));
                     }
                 }
             }
@@ -253,59 +252,5 @@ namespace AZUL
                 Log.Error($"接收消息错误: {ex.Message}");
             }
         }
-
-        /// <summary>
-        /// 处理接收到的消息（在主线程中调用）
-        /// </summary>
-        private void OnMessageReceived(string message)
-        {
-            // 在这里处理AI返回的消息
-            // 例如：解析AI决策，触发游戏事件等
-            Log.Info($"处理AI消息: {message}");
-
-            // TODO: 触发自定义事件或调用回调函数
-        }
     }
-
-    ///// <summary>
-    ///// Unity主线程调度器（需要添加到场景中）
-    ///// </summary>
-    //public class UnityMainThreadDispatcher : MonoBehaviour
-    //{
-    //    private static UnityMainThreadDispatcher _instance;
-    //    private static Queue<Action> _executionQueue = new Queue<Action>();
-
-    //    public static UnityMainThreadDispatcher Instance
-    //    {
-    //        get
-    //        {
-    //            if (_instance == null)
-    //            {
-    //                GameObject obj = new GameObject("UnityMainThreadDispatcher");
-    //                _instance = obj.AddComponent<UnityMainThreadDispatcher>();
-    //                DontDestroyOnLoad(obj);
-    //            }
-    //            return _instance;
-    //        }
-    //    }
-
-    //    void Update()
-    //    {
-    //        lock (_executionQueue)
-    //        {
-    //            while (_executionQueue.Count > 0)
-    //            {
-    //                _executionQueue.Dequeue().Invoke();
-    //            }
-    //        }
-    //    }
-
-    //    public static void Enqueue(Action action)
-    //    {
-    //        lock (_executionQueue)
-    //        {
-    //            _executionQueue.Enqueue(action);
-    //        }
-    //    }
-    //}
 }

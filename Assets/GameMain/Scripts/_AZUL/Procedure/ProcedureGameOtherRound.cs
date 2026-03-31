@@ -1,4 +1,6 @@
+using DG.Tweening;
 using GameFramework.Event;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -29,6 +31,7 @@ namespace AZUL
             // 订阅棋子移动完成事件
             GameEntry.Event.Subscribe(MovePieceCompleteEventArgs.EventId, OnMovePieceComplete);
             GameEntry.Event.Subscribe(GameResetEventArgs.EventId, OnGameReset);
+            GameEntry.Event.Subscribe(ReceiveAIServerMsgEventArgs.EventId, OnReceiveAIServerMsg);
 
             GameEntry.Referee.ShowTip("现在是对手的回合");
         }
@@ -47,6 +50,25 @@ namespace AZUL
             {
                 GameEntry.Event.Unsubscribe(GameResetEventArgs.EventId, OnGameReset);
                 GameEntry.Event.Unsubscribe(MovePieceCompleteEventArgs.EventId, OnMovePieceComplete);
+                GameEntry.Event.Unsubscribe(ReceiveAIServerMsgEventArgs.EventId, OnReceiveAIServerMsg);
+            }
+        }
+
+        private void OnReceiveAIServerMsg(object sender, GameEventArgs e)
+        {
+            if (GameEntry.BoardGame.FightwithAI)
+            {
+                ReceiveAIServerMsgEventArgs ne = (ReceiveAIServerMsgEventArgs)e;
+                AIAction aiAction = ne.AIAction;
+                //延时2秒执行AI动作，模拟AI思考时间
+                DOVirtual.DelayedCall(2f, () =>
+                {
+                    GameEntry.BoardGame.ExecuteAIAction(aiAction);
+                });
+            }
+            else
+            {
+                Log.Error("当前没有与AI打牌但收到了AI服务器消息");
             }
         }
 

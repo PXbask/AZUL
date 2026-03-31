@@ -944,9 +944,75 @@ namespace AZUL
             }
         }
 
-        public void ParseAIAction(string json)
+        public void ExecuteAIAction(AIAction action)
         {
-            //延时2秒执行，模拟AI思考时间
+            PieceColorType colorType = (PieceColorType)action.color;
+            var allSameColorTokens = new List<PieceToken>(); 
+            if (action.sourceId == -1)
+            {
+                //说明来源是中间区域
+                var firstToken = BoardGameUtility.GetFirstTokenInMidArea();
+                if (firstToken != null)
+                {
+                    //需要把首位token放入减分区
+                    var loseAreas_fiestToken = BoardGameUtility.GetEmptyTokenAreaInLoseArea(GetBoardWithCurrentComp());
+                    //MovePieceToSubLoseArea(new List<PieceToken> { firstToken }, loseAreas_fiestToken);
+                    MoveFirstTokenToSub(firstToken);
+                }
+
+
+                allSameColorTokens = BoardGameUtility.GetAllColorTypeTokenInMidTable(colorType);
+                if (action.destinationId == -1)
+                {
+                    //说明目的地是弃牌区
+                    var loseAreas = BoardGameUtility.GetEmptyTokenAreaInLoseArea(m_OtherBoard);
+                    MovePieceToSubLoseArea(allSameColorTokens, loseAreas);
+                }
+                else
+                {
+                    //说明目的地是花砖区行
+                    var leftAreas = BoardGameUtility.GetEmptyTokenAreaInManualAreaInRow(m_OtherBoard, action.destinationId);
+                    var loseAreas = BoardGameUtility.GetEmptyTokenAreaInLoseArea(m_OtherBoard);
+                    MovePieceListToManualSubLoseArea(allSameColorTokens, leftAreas, loseAreas);
+                }
+            }
+            else
+            {
+                //说明来源是工厂圆盘
+                allSameColorTokens = BoardGameUtility.GetAllColorTypeTokenInFactory(colorType, action.sourceId, out var remainTokens);
+                if(action.destinationId == -1)
+                {
+                    //说明目的地是弃牌区
+                    var loseAreas = BoardGameUtility.GetEmptyTokenAreaInLoseArea(m_OtherBoard);
+                    MovePieceToSubLoseArea(allSameColorTokens, loseAreas);
+                    //将工厂圆盘内剩余token放入中间区域
+                    int remainCount = remainTokens.Count;
+                    var midList = BoardGameUtility.GetEmptyTokenAreaInMidArea(remainCount);
+                    for (int i = 0; i < remainCount; i++)
+                    {
+                        midList[i].PlaceToken(remainTokens[i]);
+                    }
+                }
+                else
+                {
+                    //说明目的地是花砖区行
+                     var leftAreas = BoardGameUtility.GetEmptyTokenAreaInManualAreaInRow(m_OtherBoard, action.destinationId);
+                    var loseAreas = BoardGameUtility.GetEmptyTokenAreaInLoseArea(m_OtherBoard);
+                    MovePieceListToManualSubLoseArea(allSameColorTokens, leftAreas, loseAreas);
+                    //将工厂圆盘内剩余token放入中间区域
+                    int remainCount = remainTokens.Count;
+                    var midList = BoardGameUtility.GetEmptyTokenAreaInMidArea(remainCount);
+                    for (int i = 0; i < remainCount; i++)
+                    {
+                        midList[i].PlaceToken(remainTokens[i]);
+                    }
+                }
+            }
+
+            var tmpPlayer = CurrentPlayer;
+            SwitchPlayer();
+            GameEntry.Event.Fire(this, MovePieceCompleteEventArgs.Create(null, null, null, tmpPlayer));
+            ClearSelectedPieceToken();
         }
     }
 }
