@@ -451,6 +451,33 @@ namespace AZUL
         }
 
         /// <summary>
+        /// 玩家的颜色区某行被填满的数量
+        /// </summary>
+        /// <param name="playerBoard"></param>
+        /// <returns></returns>
+        public static int GetColoredAreaRowFullFilledNum(PlayerBoard playerBoard)
+        {
+            var filledRowNum = 0;
+            for (int i = 0; i < playerBoard.RightPlaceTokenAreas.Count; i++)
+            {
+                bool isFullFilled = true;
+                foreach (var area in playerBoard.RightPlaceTokenAreas[i].Areas)
+                {
+                    if (area.IsEmpty())
+                    {
+                        isFullFilled = false;
+                        break;
+                    }
+                }
+                if (isFullFilled)
+                {
+                    filledRowNum++;
+                }
+            }
+            return filledRowNum;
+        }
+
+        /// <summary>
         /// 计算终局结算获得的分数
         /// </summary>
         /// <returns></returns>

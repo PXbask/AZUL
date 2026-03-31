@@ -834,6 +834,7 @@ namespace AZUL
 
         public PlayerBoard GetWinner()
         {
+            //谁分数高谁获胜
             if (m_SelfBoard.Score > m_OtherBoard.Score)
             {
                 return m_SelfBoard;
@@ -844,8 +845,19 @@ namespace AZUL
             }
             else
             {
-                return null; // 平局
+                //否则最多水平列获胜
+                int selfFilledNum = BoardGameUtility.GetColoredAreaRowFullFilledNum(m_SelfBoard);
+                int otherFilledNum = BoardGameUtility.GetColoredAreaRowFullFilledNum(m_OtherBoard);
+                if (selfFilledNum > otherFilledNum)
+                {
+                    return m_SelfBoard;
+                }
+                else if(selfFilledNum < otherFilledNum)
+                {
+                    return m_OtherBoard;
+                }
             }
+            return null; // 平局
         }
 
         /// <summary>
