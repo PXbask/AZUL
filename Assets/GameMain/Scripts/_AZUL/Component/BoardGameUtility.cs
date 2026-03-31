@@ -584,5 +584,40 @@ namespace AZUL
                 color = area.IsEmpty() ? PieceColorType.SpecialToken : area.Token.PieceTokenData.ColorType
             };
         }
+
+        /// <summary>
+        /// 获取当前棋盘上所有的棋子实体，包括玩家区域、工厂区域、分数区域和中间区域
+        /// </summary>
+        /// <returns></returns>
+        public static List<Entity> GetAllPiecesInBoard()
+        {
+            var res = new List<Entity>();
+            //先找自己的
+            var pb = GameEntry.BoardGame.GetPlayerBoard(PlaceAreaCamp.Self);
+            res.AddRange(pb.GetAllEntityInBoard());
+            //再找对方的
+            pb = GameEntry.BoardGame.GetPlayerBoard(PlaceAreaCamp.Other);
+            res.AddRange(pb.GetAllEntityInBoard());
+            //再找工厂区域的
+            foreach(var areas in GameEntry.BoardGame.MidBoard.FactoryDisks)
+            {
+                foreach(var area in areas.TokenAreas)
+                {
+                    if (!area.IsEmpty())
+                    {
+                        res.Add(area.Token);
+                    }
+                }
+            }
+            //再找中间区域的
+            foreach(var area in GameEntry.BoardGame.MidBoard.CenterTokenAreas)
+            {
+                if (!area.IsEmpty())
+                {
+                    res.Add(area.Token);
+                }
+            }
+            return res;
+        }
     }
 }

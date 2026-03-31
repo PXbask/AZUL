@@ -13,14 +13,14 @@ namespace AZUL
 {
     public class AIComponent : GameFrameworkComponent
     {
-        private bool m_Active = false;
+        private bool m_Running = false;
         private AINetwork m_AINetwork = null;
         private CancellationTokenSource m_CancellationTokenSource = null;
 
         protected override void Awake()
         {
             base.Awake();
-            m_Active = false;
+            m_Running = false;
         }
 
         private void OnDestroy()
@@ -33,13 +33,13 @@ namespace AZUL
         /// </summary>
         public async void Run()
         {
-            if (m_Active)
+            if (m_Running)
             {
                 Log.Warning("AI已经在运行中");
                 return;
             }
 
-            m_Active = true;
+            m_Running = true;
             m_CancellationTokenSource = new CancellationTokenSource();
             m_AINetwork = new AINetwork();
 
@@ -58,21 +58,21 @@ namespace AZUL
         /// </summary>
         public void Stop()
         {
-            if (!m_Active)
+            if (!m_Running)
             {
                 return;
             }
 
-            m_Active = false;
+            m_Running = false;
             m_CancellationTokenSource?.Cancel();
             m_CancellationTokenSource?.Dispose();
             m_CancellationTokenSource = null;
             m_AINetwork = null;
         }
 
-        public bool IsActive()
+        public bool IsRunning()
         {
-            return m_Active;
+            return m_Running;
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace AZUL
         /// </summary>
         public void SendNetworkMessage(string message)
         {
-            if (!m_Active || m_AINetwork == null)
+            if (!m_Running || m_AINetwork == null)
             {
                 Log.Warning("AI未运行，无法发送消息");
                 return;

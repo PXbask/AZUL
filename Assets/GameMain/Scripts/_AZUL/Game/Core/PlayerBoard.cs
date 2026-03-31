@@ -14,6 +14,9 @@ namespace AZUL
 
         public ScorePieceToken ScorePieceToken;
 
+        /// <summary>
+        /// 分数棋子放置区域
+        /// </summary>
         public List<ScorePlaceTokenArea> ScorePlaceTokenAreas = new List<ScorePlaceTokenArea>();
 
         /// <summary>
@@ -26,8 +29,14 @@ namespace AZUL
         /// </summary>
         public List<ColoredPlaceTokenAreaRow> RightPlaceTokenAreas = new List<ColoredPlaceTokenAreaRow>();
 
+        /// <summary>
+        /// 下方减分区域（使用包装类支持 Inspector 序列化）
+        /// </summary>
         public List<LosePlaceTokenArea> LosePlaceTokenAreas = new List<LosePlaceTokenArea>();
 
+        /// <summary>
+        /// 当前分数
+        /// </summary>
         private int m_Score = 0;
 
         [SerializeField]
@@ -124,6 +133,43 @@ namespace AZUL
             if (row < 0 || row >= RightPlaceTokenAreas.Count) return null;
             if (col < 0 || col >= RightPlaceTokenAreas[row].Areas.Count) return null;
             return RightPlaceTokenAreas[row].Areas[col];
+        }
+
+        public List<Entity> GetAllEntityInBoard()
+        {
+            var res = new List<Entity>();
+            if (ScorePieceToken)
+            {
+                res.Add(ScorePieceToken);
+            }
+            foreach(var areas in LeftPlaceTokenAreas)
+            {
+                foreach(var area in areas.Areas)
+                {
+                    if (area.Token != null)
+                    {
+                        res.Add(area.Token);
+                    }
+                }
+            }
+            foreach(var areas in RightPlaceTokenAreas)
+            {
+                foreach (var area in areas.Areas)
+                {
+                    if (area.Token != null)
+                    {
+                        res.Add(area.Token);
+                    }
+                }
+            }
+            foreach (var area in LosePlaceTokenAreas)
+            {
+                if (area.Token != null)
+                {
+                    res.Add(area.Token);
+                }
+            }
+            return res;
         }
 
         public PlayerBoardData GetPlayerBoardData()

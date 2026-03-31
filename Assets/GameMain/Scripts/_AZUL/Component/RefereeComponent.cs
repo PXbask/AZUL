@@ -13,10 +13,17 @@ namespace AZUL
         private bool m_Running = false;
         private bool m_HasRegisterEvent = false;
 
+        [Header("提示文本")]
         [SerializeField]
-        private TextMeshProUGUI tipText;
+        private TextMeshProUGUI m_TipText;
         [SerializeField]
-        private string tipTextPath;
+        private string m_TipTextPath;
+
+        [Header("内置菜单")]
+        [SerializeField]
+        private RefereeTrigger m_Trigger;
+        [SerializeField]
+        private string m_TriggerPath;
 
         protected override void Awake()
         {
@@ -60,15 +67,27 @@ namespace AZUL
 
         private void BindingSceneObjects()
         {
-            if(tipText == null)
+            if(m_TipText == null)
             {
-                var obj = GameObject.Find(tipTextPath);
+                var obj = GameObject.Find(m_TipTextPath);
                 if(obj == null)
                 {
-                    Log.Error("Failed to find tip text object at path: {0}", tipTextPath);
+                    Log.Error("Failed to find tip text object at path: {0}", m_TipTextPath);
                     return;
                 }
-                tipText = obj.GetComponent<TextMeshProUGUI>();
+                m_TipText = obj.GetComponent<TextMeshProUGUI>();
+            }
+
+            if(m_Trigger == null)
+            {
+                var obj = GameObject.Find(m_TriggerPath);
+                if(obj == null)
+                {
+                    Log.Error("Failed to find referee trigger object at path: {0}", m_TriggerPath);
+                    return;
+                }
+                m_Trigger = obj.GetComponent<RefereeTrigger>();
+                StartCoroutine(m_Trigger.Init());
             }
         }
 
@@ -80,7 +99,7 @@ namespace AZUL
                 return;
             }
 
-            this.tipText.text = tipText;
+            this.m_TipText.text = tipText;
             Log.Info("Referee shows tip: {0}", tipText);
         }
     }

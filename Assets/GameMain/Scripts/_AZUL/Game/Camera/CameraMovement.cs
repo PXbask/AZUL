@@ -34,8 +34,6 @@ namespace AZUL
         private float m_CurrentPitch = 0f;
         private float m_CurrentYaw = 0f;
 
-        public bool FunctionActive { get; set; } = false;
-
         private void Start()
         {
             m_Camera = GetComponent<Camera>() ?? Camera.main;
@@ -54,7 +52,6 @@ namespace AZUL
 
         private void Update()
         {
-            if (!FunctionActive) return;
             HandleMovement();
             HandleZoom();
             HandleRotation();

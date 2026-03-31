@@ -13,15 +13,11 @@ namespace AZUL
 {
     public class BoardGameComponent : GameFrameworkComponent
     {
-        public List<int> RemainPieceIds = new List<int>();
-
-        public List<int> LostPieceIds = new List<int>();
+        [SerializeField]
+        private bool m_Running = false;
 
         [SerializeField]
-        private bool m_Active = false;
-
-        [SerializeField]
-        private bool m_HasSubscribe = false;
+        private bool m_HasRegisterEvent = false;
 
         /// <summary>
         /// 当前选中的棋子
@@ -32,13 +28,47 @@ namespace AZUL
         /// 主相机（用于射线检测）
         /// </summary>
         private Camera m_MainCamera;
-        private Transform m_TargetCameraTrans;
 
+        [Header("相机动画目的地")]
+        [SerializeField]
+        private Transform m_CameraDestinationTrans;
+        [SerializeField]
+        private string m_CameraDestinationTransPath;
+
+        [Header("棋子袋")]
+        [SerializeField]
         private Transform m_PieceBag;
+        [SerializeField]
+        private string m_PieceBagPath;
 
+        [Header("玩家棋盘")]
+        [SerializeField]
         private PlayerBoard m_SelfBoard;
+        [SerializeField]
+        private string m_SelfBoardPath;
+
+        [Header("对手棋盘")]
+        [SerializeField]
         private PlayerBoard m_OtherBoard;
+        [SerializeField]
+        private string m_OtherBoardPath;
+
+        [Header("中间公共棋盘")]
+        [SerializeField]
         private MidBoard m_MidBoard;
+        [SerializeField]
+        private string m_MidBoardPath;
+
+        /// <summary>
+        /// 剩余的棋子Id
+        /// </summary>
+        private List<int> RemainPieceIds = new List<int>();
+
+        /// <summary>
+        /// 放入弃牌区的棋子Id
+        /// </summary>
+        private List<int> LostPieceIds = new List<int>();
+
         public MidBoard MidBoard => m_MidBoard;
 
         public readonly int PlayerNum = 2;
@@ -53,50 +83,124 @@ namespace AZUL
                 m_CurrentPlayer = value; 
                 if(value == PlaceAreaCamp.Other && FightwithAI)
                 {
-                    CanInteractive = false;
+                    m_Interactive = false;
                 }
                 else
                 {
-                    CanInteractive = true;
+                    m_Interactive = true;
                 }
             }
         }
 
-        public bool CanInteractive { get; set; }
-        public bool FightwithAI => GameEntry.AI.IsActive();
+        public bool m_Interactive { get; set; }
+        public bool FightwithAI => GameEntry.AI.IsRunning();
 
         protected override void Awake()
         {
             base.Awake();
-            m_Active = false;
-            m_HasSubscribe = false;
+            m_Running = false;
+            m_HasRegisterEvent = false;
 
-            CanInteractive = false;
+            m_Interactive = false;
         }
 
-        public void SubscribeEvents()
+        #region 事件订阅与取消
+        private void SubscribeEvents()
         {
-            if (m_HasSubscribe) return;
             // 订阅实体显示成功事件（在 Start 中确保 GameEntry 已初始化）
             GameEntry.Event.Subscribe(ShowEntitySuccessEventArgs.EventId, OnShowEntitySuccess);
-            m_HasSubscribe = true;
+
+            GameEntry.Event.Subscribe(BoardGameSceneEnterEventArgs.EventId, OnBoardGameSceneEnter);
         }
 
-        private void OnDestroy()
+        private void UnsubscribeEvents()
+        {
+            GameEntry.Event.Unsubscribe(ShowEntitySuccessEventArgs.EventId, OnShowEntitySuccess);
+            GameEntry.Event.Unsubscribe(BoardGameSceneEnterEventArgs.EventId, OnBoardGameSceneEnter);
+        }
+
+        /// <summary>
+        /// 实体显示成功回调
+        /// </summary>
+        private void OnShowEntitySuccess(object sender, GameEventArgs e)
+        {
+            ShowEntitySuccessEventArgs ne = (ShowEntitySuccessEventArgs)e;
+
+            // 检查是否是我们创建的棋子实体
+            if (ne.EntityLogicType == typeof(PieceToken))
+            {
+                PieceToken pieceToken = (PieceToken)ne.Entity.Logic;
+                PieceTokenData data = (PieceTokenData)ne.UserData;
+
+                // 在这里处理获取到的实体
+                Log.Info("PieceToken created successfully. EntityId: {0}, TypeId: {1}", pieceToken.Id, data.TypeId);
+
+                // 如果需要将棋子放置到特定区域
+                if (data.TargetArea != null)
+                {
+                    data.TargetArea.PlaceToken(pieceToken);
+                }
+            }
+
+            // 如果需要处理其他类型的实体，可以在这里添加更多的条件分支
+            if (ne.EntityLogicType == typeof(ScorePieceToken))
+            {
+                ScorePieceToken pieceToken = (ScorePieceToken)ne.Entity.Logic;
+                ScorePieceTokenData data = (ScorePieceTokenData)ne.UserData;
+
+                Log.Info("ScorePieceToken created successfully. EntityId: {0}, TypeId: {1}", pieceToken.Id, data.TypeId);
+                // 如果需要将棋子放置到特定区域
+                if (data.TargetArea != null)
+                {
+                    data.TargetArea.PlaceToken(pieceToken);
+                }
+                //指定玩家的分数token
+                if (data.TargetArea.Camp == PlaceAreaCamp.Self)
+                {
+                    m_SelfBoard.ScorePieceToken = pieceToken;
+                }
+                else if (data.TargetArea.Camp == PlaceAreaCamp.Other)
+                {
+                    m_OtherBoard.ScorePieceToken = pieceToken;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 当刚刚进入游戏场景时
+        /// </summary>
+        private void OnBoardGameSceneEnter(object sender, GameEventArgs e)
+        {
+            m_Running = true;
+            RegisterSceneObjects();
+        }
+        #endregion
+
+        private void OnDisable()
         {
             // 取消订阅事件
             if (GameEntry.Event != null)
             {
-                //GameEntry.Event.Unsubscribe(ShowEntitySuccessEventArgs.EventId, OnShowEntitySuccess);
+                UnsubscribeEvents();
             }
         }
 
         private void Update()
         {
-            if (!m_Active) return;
-            if (!CanInteractive) return;
+            //注册事件
+            if (!m_HasRegisterEvent)
+            {
+                if(GameEntry.Event != null)
+                {
+                    SubscribeEvents();
+                    m_HasRegisterEvent= true;
+                }
+            }
+
+            if (!m_Running) return;
 
             // 检测鼠标左键点击
+            if (!m_Interactive) return;
             if (Input.GetMouseButtonDown(0))
             {
                 HandleMouseClick();
@@ -356,33 +460,78 @@ namespace AZUL
             ClearSelectedPieceToken();
         }
 
-        public void GameInit()
+        public void RegisterSceneObjects()
         {
-            if (m_PieceBag == null)
-            {
-                m_PieceBag = GameObject.Find("PieceBag").transform;
-            }
-            if (m_SelfBoard == null)
-            {
-                m_SelfBoard = GameObject.Find("Board_self").GetComponent<PlayerBoard>();
-            }
-            if (m_OtherBoard == null)
-            {
-                m_OtherBoard = GameObject.Find("Board_other").GetComponent<PlayerBoard>();
-            }
-            if (m_MidBoard == null)
-            {
-                m_MidBoard = GameObject.Find("MidBoard").GetComponent<MidBoard>();
-            }
             // 获取主相机
             m_MainCamera = Camera.main;
             if (m_MainCamera == null)
             {
-                Log.Warning("Main Camera not found. Raycast detection will not work.");
+                Log.Error("Main Camera not found. Raycast detection will not work.");
             }
-            if (m_TargetCameraTrans == null)
+
+            if (m_CameraDestinationTrans == null)
             {
-                m_TargetCameraTrans = GameObject.Find("TargetCameraTrans").transform;
+                var obj = GameObject.Find(m_CameraDestinationTransPath);
+                if(obj != null)
+                {
+                    m_CameraDestinationTrans = obj.transform;
+                }
+                else
+                {
+                    Log.Error("Cant find m_CameraDestinationTrans object");
+                }
+            }
+
+            if (m_PieceBag == null)
+            {
+                var obj = GameObject.Find(m_PieceBagPath);
+                if (obj != null)
+                {
+                    m_PieceBag = obj.transform;
+                }
+                else
+                {
+                    Log.Error("Cant find m_PieceBag object");
+                }
+            }
+
+            if (m_SelfBoard == null)
+            {
+                var obj = GameObject.Find(m_SelfBoardPath);
+                if (obj != null)
+                {
+                    m_SelfBoard = obj.GetComponent<PlayerBoard>();
+                }
+                else
+                {
+                    Log.Error("Cant find m_SelfBoard object");
+                }
+            }
+
+            if (m_OtherBoard == null)
+            {
+                var obj = GameObject.Find(m_OtherBoardPath);
+                if (obj != null)
+                {
+                    m_OtherBoard = obj.GetComponent<PlayerBoard>();
+                }
+                else
+                {
+                    Log.Error("Cant find m_OtherBoard object");
+                }
+            }
+
+            if (m_MidBoard == null)
+            {
+                var obj = GameObject.Find(m_MidBoardPath);
+                if (obj != null)
+                {
+                    m_MidBoard = obj.GetComponent<MidBoard>();
+                }
+                else
+                {
+                    Log.Error("Cant find m_MidBoard object");
+                }
             }
         }
 
@@ -391,8 +540,7 @@ namespace AZUL
         /// </summary>
         public void GameReset()
         {
-            m_Active = true;
-            CanInteractive = false;
+            m_Interactive = false;
 
             // 清除所有在场的棋子实体
             ClearAllPieceTokens();
@@ -405,9 +553,6 @@ namespace AZUL
                 RemainPieceIds.Add(piece.Id);
             }
 
-            GameInit();
-
-            SubscribeEvents();
             //默认先手玩家为自己
             SetCurrentPlayer(PlaceAreaCamp.Self);
 
@@ -420,8 +565,8 @@ namespace AZUL
         /// </summary>
         public void DealPiece()
         {
-            CanInteractive = false;
-            if (!m_Active)
+            m_Interactive = false;
+            if (!m_Running)
             {
                 Log.Error("BoardGameComponent is not active. Please call GameReset() before dealing pieces.");
                 return;
@@ -455,53 +600,6 @@ namespace AZUL
             for (int i = 0; i < randomTokens.Count; i++)
             {
                 SpawnPieceAndPlace(randomTokens[i], midDiskSlots[i]);
-            }
-        }
-
-        /// <summary>
-        /// 实体显示成功回调
-        /// </summary>
-        private void OnShowEntitySuccess(object sender, GameEventArgs e)
-        {
-            ShowEntitySuccessEventArgs ne = (ShowEntitySuccessEventArgs)e;
-
-            // 检查是否是我们创建的棋子实体
-            if (ne.EntityLogicType == typeof(PieceToken))
-            {
-                PieceToken pieceToken = (PieceToken)ne.Entity.Logic;
-                PieceTokenData data = (PieceTokenData)ne.UserData;
-
-                // 在这里处理获取到的实体
-                Log.Info("PieceToken created successfully. EntityId: {0}, TypeId: {1}", pieceToken.Id, data.TypeId);
-
-                // 如果需要将棋子放置到特定区域
-                if (data.TargetArea != null)
-                {
-                    data.TargetArea.PlaceToken(pieceToken);
-                }
-            }
-
-            // 如果需要处理其他类型的实体，可以在这里添加更多的条件分支
-            if (ne.EntityLogicType == typeof(ScorePieceToken))
-            {
-                ScorePieceToken pieceToken = (ScorePieceToken)ne.Entity.Logic;
-                ScorePieceTokenData data = (ScorePieceTokenData)ne.UserData;
-
-                Log.Info("ScorePieceToken created successfully. EntityId: {0}, TypeId: {1}", pieceToken.Id, data.TypeId);
-                // 如果需要将棋子放置到特定区域
-                if (data.TargetArea != null)
-                {
-                    data.TargetArea.PlaceToken(pieceToken);
-                }
-                //指定玩家的分数token
-                 if (data.TargetArea.Camp == PlaceAreaCamp.Self)
-                {
-                    m_SelfBoard.ScorePieceToken = pieceToken;
-                }
-                else if (data.TargetArea.Camp == PlaceAreaCamp.Other)
-                {
-                    m_OtherBoard.ScorePieceToken = pieceToken;
-                }
             }
         }
 
@@ -865,6 +963,32 @@ namespace AZUL
         /// </summary>
         private void ClearAllPieceTokens()
         {
+            //var allEntitys = BoardGameUtility.GetAllPiecesInBoard();
+            //foreach(var entity in allEntitys)
+            //{
+            //    var pieceToken = entity as PieceToken;
+            //    if (pieceToken)
+            //    {
+            //        // 清除棋子与放置区域的关联
+            //        if (pieceToken.OwnerPlaceTokenArea != null)
+            //        {
+            //            pieceToken.OwnerPlaceTokenArea.RemoveToken();
+            //            pieceToken.OwnerPlaceTokenArea = null;
+            //        }
+            //        var tween = pieceToken.CachedTransform.DOMove(m_PieceBag.position, 0.5f).SetEase(Ease.InBack);
+            //        tween.onComplete += () =>
+            //        {
+            //            GameEntry.Entity.HideEntity(pieceToken);
+            //        };
+            //        tween.onKill += () =>
+            //        {
+            //            GameEntry.Entity.HideEntity(pieceToken);
+            //        };
+            //    }
+            //}
+
+
+
             // 获取所有已加载的实体
             var allEntities = GameEntry.Entity.GetAllLoadedEntities();
 
@@ -906,29 +1030,19 @@ namespace AZUL
         /// <summary>
         /// 游戏开始时的过场动画
         /// </summary>
-        /// <param name="callback"></param>
-        public void MoveCameraAnimWhenStartGame(Action callback)
+        /// <param name="onComplete"></param>
+        public void PlayStartGameCameraAnim(Action onComplete)
         {
-            if (m_TargetCameraTrans != null && m_MainCamera != null)
+            if (m_CameraDestinationTrans != null && m_MainCamera != null)
             {
-                m_MainCamera.transform.DOMove(m_TargetCameraTrans.position, 4f).SetEase(Ease.InOutSine);
-                m_MainCamera.transform.DORotateQuaternion(m_TargetCameraTrans.rotation, 4f)
+                m_MainCamera.transform.DOMove(m_CameraDestinationTrans.position, 4f).SetEase(Ease.InOutSine);
+                m_MainCamera.transform.DORotateQuaternion(m_CameraDestinationTrans.rotation, 4f)
                     .SetEase(Ease.InOutSine).OnComplete(() =>
                     {
-                        callback.Invoke();
-                        CameraFunctionActive(true);
+                        onComplete.Invoke();
+                        GameEntry.PlayerView.SetMovementActive(true);
                     });
             }
-        }
-
-        /// <summary>
-        /// 是否激活相机功能（包括旋转、缩放、移动等）
-        /// </summary>
-        /// <param name="active"></param>
-        public void CameraFunctionActive(bool active)
-        {
-            var movement = m_MainCamera.GetComponent<CameraMovement>();
-            movement.FunctionActive = active;
         }
 
         /// <summary>

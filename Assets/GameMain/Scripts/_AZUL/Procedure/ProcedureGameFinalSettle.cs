@@ -24,7 +24,7 @@ namespace AZUL
             GameEntry.Event.Subscribe(GameResetEventArgs.EventId, OnGameReset);
 
             m_BoardGameComponent = GameEntry.BoardGame;
-            m_BoardGameComponent.CanInteractive = false;
+            m_BoardGameComponent.m_Interactive = false;
             m_FinalSettle = false;
             m_ResetGame = false;
 

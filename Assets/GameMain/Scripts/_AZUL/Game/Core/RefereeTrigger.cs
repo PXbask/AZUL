@@ -22,13 +22,16 @@ namespace AZUL
 
         private Camera m_MainCamera;
 
-        private void Start()
+        public IEnumerator Init()
         {
-            m_MainCamera = Camera.main;
             m_ResetButton.onClick.AddListener(OnClickReset);
             m_ResetButtonWithAI.onClick.AddListener(OnClickResetWithAI);
             m_QuitButton.onClick.AddListener(OnClickQuit);
 
+            yield return null;
+            //等待PlayerView加载完毕
+            m_MainCamera = GameEntry.PlayerView.GetPlayerCamera();
+            m_Canvas.worldCamera = m_MainCamera;
             m_Canvas.gameObject.SetActive(false);
         }
 
@@ -54,11 +57,6 @@ namespace AZUL
         {
             if (m_MainCamera != null && m_Canvas != null)
             {
-                //高度与相机平齐
-                //var pos = m_Canvas.transform.position;
-                //pos.y = m_MainCamera.transform.position.y;
-                //m_Canvas.transform.position = pos;
-
                 //只绕y轴旋转
                 var rot = m_MainCamera.transform.rotation.eulerAngles;
                 m_Canvas.transform.rotation = Quaternion.Euler(0, rot.y, 0);
@@ -67,7 +65,7 @@ namespace AZUL
 
         private void OnClickReset()
         {
-            if (GameEntry.AI.IsActive())
+            if (GameEntry.AI.IsRunning())
             {
                 GameEntry.AI.Stop();
             }
@@ -76,7 +74,7 @@ namespace AZUL
 
         private void OnClickResetWithAI()
         {
-            if (!GameEntry.AI.IsActive())
+            if (!GameEntry.AI.IsRunning())
             {
                 GameEntry.AI.Run();
             }

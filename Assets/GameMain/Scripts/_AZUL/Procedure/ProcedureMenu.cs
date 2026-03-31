@@ -29,6 +29,8 @@ namespace AZUL
             m_BoardGameComponent = GameEntry.BoardGame;
 
             GameEntry.UI.OpenUIForm((int)UIFormId.MenuForm, this);
+
+            GameEntry.Event.Fire(this, BoardGameSceneEnterEventArgs.Create());
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
@@ -45,8 +47,9 @@ namespace AZUL
                 if (!m_Flag)
                 {
                     m_Flag = true;
-                    m_BoardGameComponent.GameInit();
-                    m_BoardGameComponent.MoveCameraAnimWhenStartGame(() =>
+
+                    //动画播放完毕后切换流程
+                    m_BoardGameComponent.PlayStartGameCameraAnim(() =>
                     {
                         ChangeState<ProcedureMain>(procedureOwner);
                     });

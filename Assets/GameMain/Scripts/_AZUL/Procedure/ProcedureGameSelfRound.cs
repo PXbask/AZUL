@@ -24,7 +24,7 @@ namespace AZUL
             base.OnEnter(procedureOwner);
 
             m_BoardGameComponent = GameEntry.BoardGame;
-            m_BoardGameComponent.CanInteractive = true;
+            m_BoardGameComponent.m_Interactive = true;
             m_ShouldChange = false;
             m_ResetGame = false;
 
@@ -44,7 +44,7 @@ namespace AZUL
         {
             base.OnLeave(procedureOwner, isShutdown);
 
-            m_BoardGameComponent.CanInteractive = false;
+            m_BoardGameComponent.m_Interactive = false;
             // 取消订阅棋子移动完成事件
             if (GameEntry.Event != null)
             {
@@ -92,7 +92,7 @@ namespace AZUL
             if(ne.Camp == PlaceAreaCamp.Self)
             {
                 m_ShouldChange=true;
-                m_BoardGameComponent.CanInteractive = false; // 禁止交互，等待流程切换完成
+                m_BoardGameComponent.m_Interactive = false; // 禁止交互，等待流程切换完成
 
                 return; // 只处理自己回合的棋子移动完成事件
             }

@@ -38,22 +38,17 @@ namespace AZUL
 
         private Tween m_SelectTween = null;
         private Tween m_DeselectTween = null;
+        private Tween m_ResetMoveTween = null;
 
-#if UNITY_2017_3_OR_NEWER
         protected override void OnInit(object userData)
-#else
-        protected internal override void OnInit(object userData)
-#endif
         {
             base.OnInit(userData);
             m_SelectTween = null;
+            m_DeselectTween = null;
+            m_ResetMoveTween = null;
         }
 
-#if UNITY_2017_3_OR_NEWER
         protected override void OnShow(object userData)
-#else
-        protected internal override void OnShow(object userData)
-#endif
         {
             base.OnShow(userData);
 
@@ -70,11 +65,7 @@ namespace AZUL
             renderer.sharedMaterial = mat;
         }
 
-#if UNITY_2017_3_OR_NEWER
         protected override void OnUpdate(float elapseSeconds, float realElapseSeconds)
-#else
-        protected internal override void OnUpdate(float elapseSeconds, float realElapseSeconds)
-#endif
         {
             base.OnUpdate(elapseSeconds, realElapseSeconds);
         }

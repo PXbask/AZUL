@@ -29,8 +29,6 @@ namespace AZUL
             m_ResetGame = false;
 
             GameEntry.Event.Subscribe(GameResetEventArgs.EventId, OnGameReset);
-
-            GameEntry.Event.Fire(this, BoardGameSceneEnterEventArgs.Create());
         }
 
         private void OnGameReset(object sender, GameEventArgs e)
