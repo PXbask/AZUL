@@ -5,7 +5,9 @@
 // Feedback: mailto:ellan@gameframework.cn
 //------------------------------------------------------------
 
+using DG.Tweening;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityGameFramework.Runtime;
 
 namespace AZUL
@@ -13,23 +15,33 @@ namespace AZUL
     public class MenuForm : UGuiForm
     {
         [SerializeField]
-        private GameObject m_QuitButton = null;
+        private Button m_StartButton = null;
+
+        [SerializeField]
+        private Button m_QuitButton = null;
+
+        [SerializeField]
+        private CanvasGroup m_FormCanvasGroup = null;
+
+        private Tween m_StartTween = null;
+        private Tween m_FadeTween = null;
 
         private ProcedureMenu m_ProcedureMenu = null;
+
+        private static readonly float FADE_ANIM_INTERVAL = 0.5f;
+
+        protected override void OnInit(object userData)
+        {
+            base.OnInit(userData);
+
+            m_StartButton.onClick.AddListener(OnStartButtonClick);
+            m_QuitButton.onClick.AddListener(OnQuitButtonClick);
+        }
 
         public void OnStartButtonClick()
         {
             m_ProcedureMenu.StartGame();
-        }
-
-        public void OnSettingButtonClick()
-        {
-            //GameEntry.UI.OpenUIForm(UIFormId.SettingForm);
-        }
-
-        public void OnAboutButtonClick()
-        {
-            //GameEntry.UI.OpenUIForm(UIFormId.AboutForm);
+            PlayCloseAnim();
         }
 
         public void OnQuitButtonClick()
@@ -37,11 +49,7 @@ namespace AZUL
             UnityGameFramework.Runtime.GameEntry.Shutdown(ShutdownType.Quit);
         }
 
-#if UNITY_2017_3_OR_NEWER
         protected override void OnOpen(object userData)
-#else
-        protected internal override void OnOpen(object userData)
-#endif
         {
             base.OnOpen(userData);
 
@@ -52,18 +60,48 @@ namespace AZUL
                 return;
             }
 
-            m_QuitButton.SetActive(Application.platform != RuntimePlatform.IPhonePlayer);
+            PlayStartAnim();
         }
 
-#if UNITY_2017_3_OR_NEWER
         protected override void OnClose(bool isShutdown, object userData)
-#else
-        protected internal override void OnClose(bool isShutdown, object userData)
-#endif
         {
             m_ProcedureMenu = null;
 
+            if (m_StartTween != null)
+            {
+                m_StartTween.Kill();
+                m_StartButton = null;
+            }
+
+            if (m_FadeTween != null)
+            {
+                m_FadeTween.Kill();
+                m_FadeTween = null;
+            }
+
             base.OnClose(isShutdown, userData);
+        }
+
+        private void PlayStartAnim()
+        {
+            this.m_FormCanvasGroup.alpha = 0;
+            m_FormCanvasGroup.interactable = false;
+            m_StartTween = m_FormCanvasGroup.DOFade(1, FADE_ANIM_INTERVAL);
+            m_StartTween.OnComplete(() =>
+            {
+                m_FormCanvasGroup.interactable = true;
+            });
+        }
+
+        private void PlayCloseAnim()
+        {
+            this.m_FormCanvasGroup.alpha = 1;
+            m_FormCanvasGroup.interactable = false;
+            m_FadeTween = m_FormCanvasGroup.DOFade(0, FADE_ANIM_INTERVAL);
+            m_FadeTween.OnComplete(() =>
+            {
+                Close();
+            });
         }
     }
 }

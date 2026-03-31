@@ -39,7 +39,7 @@ namespace AZUL
 
         public void Close()
         {
-            Close(false);
+            Close(true);
         }
 
         public void Close(bool ignoreFade)

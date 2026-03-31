@@ -11,9 +11,6 @@ namespace AZUL
 {
     public class ProcedureChangeScene : ProcedureBase
     {
-        private const int MenuSceneId = 1;
-
-        private bool m_ChangeToMenu = false;
         private bool m_IsChangeSceneComplete = false;
         private int m_BackgroundMusicId = 0;
 
@@ -47,7 +44,7 @@ namespace AZUL
             GameEntry.Base.ResetNormalGameSpeed();
 
             int sceneId = procedureOwner.GetData<VarInt32>("NextSceneId");
-            m_ChangeToMenu = sceneId == MenuSceneId;
+            //m_ChangeToMenu = sceneId == MenuSceneId;
             IDataTable<DRScene> dtScene = GameEntry.DataTable.GetDataTable<DRScene>();
             DRScene drScene = dtScene.GetDataRow(sceneId);
             if (drScene == null)
@@ -79,14 +76,6 @@ namespace AZUL
                 return;
             }
 
-            //if (m_ChangeToMenu)
-            //{
-            //    ChangeState<ProcedureMenu>(procedureOwner);
-            //}
-            //else
-            //{
-            //    ChangeState<ProcedureMenu>(procedureOwner);
-            //}
             ChangeState<ProcedureMenu>(procedureOwner);
         }
 
@@ -102,7 +91,7 @@ namespace AZUL
 
             if (m_BackgroundMusicId > 0)
             {
-                //GameEntry.Sound.PlayMusic(m_BackgroundMusicId);
+                GameEntry.Sound.PlayMusic(m_BackgroundMusicId);
             }
 
             m_IsChangeSceneComplete = true;

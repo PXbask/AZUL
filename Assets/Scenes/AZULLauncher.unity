@@ -245,6 +245,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tipText: {fileID: 0}
+  tipTextPath: Referee/Canvas/TipText
 --- !u!1001 &531478033
 PrefabInstance:
   m_ObjectHideFlags: 0

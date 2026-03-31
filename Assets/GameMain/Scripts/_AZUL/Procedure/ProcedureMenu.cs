@@ -10,11 +10,10 @@ namespace AZUL
 {
     public class ProcedureMenu : ProcedureBase
     {
-        private BoardGameComponent m_BoardGameComponent = null;
-
         private bool m_StartGame = false;
+        private bool m_Flag = false;
 
-        private MenuForm m_MenuForm = null;
+        private BoardGameComponent m_BoardGameComponent = null;
 
         public void StartGame()
         {
@@ -24,19 +23,17 @@ namespace AZUL
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
-            m_BoardGameComponent = GameEntry.BoardGame;
-
-            GameEntry.Event.Subscribe(OpenUIFormSuccessEventArgs.EventId, OnOpenUIFormSuccess);
 
             m_StartGame = false;
+            m_Flag = false;
+            m_BoardGameComponent = GameEntry.BoardGame;
+
             GameEntry.UI.OpenUIForm((int)UIFormId.MenuForm, this);
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
             base.OnLeave(procedureOwner, isShutdown);
-
-            GameEntry.Event.Unsubscribe(OpenUIFormSuccessEventArgs.EventId, OnOpenUIFormSuccess);
         }
 
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
@@ -45,33 +42,16 @@ namespace AZUL
 
             if (m_StartGame)
             {
-                //procedureOwner.SetData<VarInt32>("NextSceneId", GameEntry.Config.GetInt("Scene.Main"));
-                //procedureOwner.SetData<VarByte>("GameMode", (byte)GameMode.Survival);
-                //ChangeState<ProcedureChangeScene>(procedureOwner);
-                m_StartGame = false;
-                m_BoardGameComponent.GameInit();
-                m_BoardGameComponent.MoveCameraAnimWhenStartGame(() =>
+                if (!m_Flag)
                 {
-                    ChangeState<ProcedureMain>(procedureOwner);
-                });
-
-                if (m_MenuForm != null)
-                {
-                    m_MenuForm.Close();  // 传入 true，立即关闭，跳过淡出动画
-                    m_MenuForm = null;
+                    m_Flag = true;
+                    m_BoardGameComponent.GameInit();
+                    m_BoardGameComponent.MoveCameraAnimWhenStartGame(() =>
+                    {
+                        ChangeState<ProcedureMain>(procedureOwner);
+                    });
                 }
             }
-        }
-
-        private void OnOpenUIFormSuccess(object sender, GameEventArgs e)
-        {
-            OpenUIFormSuccessEventArgs ne = (OpenUIFormSuccessEventArgs)e;
-            if (ne.UserData != this)
-            {
-                return;
-            }
-
-            m_MenuForm = (MenuForm)ne.UIForm.Logic;
         }
     }
 }

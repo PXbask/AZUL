@@ -26,16 +26,11 @@ namespace AZUL
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
-            GameEntry.Event.Subscribe(GameResetEventArgs.EventId, OnGameReset);
-
             m_ResetGame = false;
 
-            //初始化裁判
-            GameEntry.Referee.GameInit();
-            GameEntry.Referee.ShowTip("欢迎来到AZUL! 准备好了吗?");
+            GameEntry.Event.Subscribe(GameResetEventArgs.EventId, OnGameReset);
 
-            //GameEntry.AI.Run();
-            //GameEntry.AI.SendNetworkMessage("hello");
+            GameEntry.Event.Fire(this, BoardGameSceneEnterEventArgs.Create());
         }
 
         private void OnGameReset(object sender, GameEventArgs e)

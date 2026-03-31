@@ -13,7 +13,7 @@ namespace AZUL
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
-            Debug.Log("进入了 ProcedureSplash 流程");
+            Log.Info("进入了 ProcedureSplash 流程");
         }
 
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
