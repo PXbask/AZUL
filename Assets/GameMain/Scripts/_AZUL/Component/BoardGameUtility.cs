@@ -400,7 +400,11 @@ namespace AZUL
         public static void PlayerAddScore(PlayerBoard playerBoard, int score)
         {
             if (playerBoard == null) return;
-            playerBoard.Score = Mathf.Clamp(playerBoard.Score+score, 0, 100);
+            if (playerBoard.Score + score < 0)
+            {
+                playerBoard.Score = 0;
+            }
+            playerBoard.Score = playerBoard.Score + score;
         }
 
         /// <summary>

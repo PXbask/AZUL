@@ -41,7 +41,16 @@ namespace AZUL
                 m_Score = value;
                 if (scoreText != null)
                 {
-                    GameEntry.BoardGame.MoveScoreTokenToArea(ScorePieceToken, ScorePlaceTokenAreas[m_Score]);
+                    int index = Mathf.Clamp((m_Score % ScorePlaceTokenAreas.Count) + 1, 0, ScorePlaceTokenAreas.Count - 1);
+                    if(m_Score < ScorePlaceTokenAreas.Count)
+                    {
+                        index = Mathf.Clamp(m_Score, 0, ScorePlaceTokenAreas.Count);
+                    }
+                    else
+                    {
+                        index = Mathf.Clamp((m_Score - 1) % (ScorePlaceTokenAreas.Count - 1) + 1, 0, ScorePlaceTokenAreas.Count - 1);
+                    }
+                    GameEntry.BoardGame.MoveScoreTokenToArea(ScorePieceToken, ScorePlaceTokenAreas[index]);
                     scoreText.text = $"当前分数:{m_Score}";
                 }
             }
