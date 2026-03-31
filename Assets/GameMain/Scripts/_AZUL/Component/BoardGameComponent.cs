@@ -142,7 +142,8 @@ namespace AZUL
                     // 尝试获取点击物体上的 PieceToken 组件
                     PieceToken pieceToken = hit.collider.GetComponent<PieceToken>();
 
-                    if (pieceToken != null && pieceToken.CanInteractive)
+                    if (pieceToken != null && pieceToken.CanInteractive && pieceToken.OwnerPlaceTokenArea
+                        && (pieceToken.OwnerPlaceTokenArea.PositionGroup == PlaceTokenPosition.MidTable || pieceToken.OwnerPlaceTokenArea.PositionGroup == PlaceTokenPosition.Factory))
                     {
                         // 找到了 PieceToken，保存到缓存中
                         SelectPieceToken(pieceToken);

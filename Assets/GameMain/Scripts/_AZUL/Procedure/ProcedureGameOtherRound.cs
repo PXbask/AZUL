@@ -24,7 +24,7 @@ namespace AZUL
         {
             base.OnEnter(procedureOwner);
             m_BoardGameComponent = GameEntry.BoardGame;
-            m_BoardGameComponent.CanInteractive = true;
+            m_BoardGameComponent.CanInteractive = !m_BoardGameComponent.FightwithAI;
             m_ShouldChange = false;
             m_ResetGame = false;
 
@@ -34,6 +34,12 @@ namespace AZUL
             GameEntry.Event.Subscribe(ReceiveAIServerMsgEventArgs.EventId, OnReceiveAIServerMsg);
 
             GameEntry.Referee.ShowTip("现在是对手的回合");
+
+            //如果是和机器人打牌，则向AI服务器发送消息
+            if (m_BoardGameComponent.FightwithAI)
+            {
+                m_BoardGameComponent.SendCurrentBoardInfoToAIServer();
+            }
         }
 
         private void OnGameReset(object sender, GameEventArgs e)

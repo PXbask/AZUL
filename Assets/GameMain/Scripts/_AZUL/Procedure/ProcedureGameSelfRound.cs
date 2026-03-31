@@ -94,11 +94,6 @@ namespace AZUL
                 m_ShouldChange=true;
                 m_BoardGameComponent.CanInteractive = false; // 禁止交互，等待流程切换完成
 
-                if (m_BoardGameComponent.FightwithAI)
-                {
-                    m_BoardGameComponent.SendCurrentBoardInfoToAIServer();
-                }
-
                 return; // 只处理自己回合的棋子移动完成事件
             }
             else
