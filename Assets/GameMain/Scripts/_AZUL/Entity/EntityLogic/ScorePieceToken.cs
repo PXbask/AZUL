@@ -7,45 +7,23 @@ using UnityGameFramework.Runtime;
 
 namespace AZUL
 {
-    public class ScorePieceToken : Entity
+    public class ScorePieceToken : Entity, IPieceToken
     {
         [SerializeField]
         private ScorePlaceTokenArea m_PlaceTokenArea = null;
-        public ScorePlaceTokenArea OwnerPlaceTokenArea
+        public IPlaceTokenArea OwnerPlaceTokenArea
         {
             get => m_PlaceTokenArea;
-            set => m_PlaceTokenArea = value;
-        }
-#if UNITY_2017_3_OR_NEWER
-        protected override void OnInit(object userData)
-#else
-        protected internal override void OnInit(object userData)
-#endif
-        {
-            base.OnInit(userData);
+            set => m_PlaceTokenArea = value as ScorePlaceTokenArea;
         }
 
-#if UNITY_2017_3_OR_NEWER
-        protected override void OnShow(object userData)
-#else
-        protected internal override void OnShow(object userData)
-#endif
+        private bool m_Interactable = false;
+        public bool Interactable
         {
-            base.OnShow(userData);
+            get => false;
+            set => m_Interactable = value;
         }
 
-#if UNITY_2017_3_OR_NEWER
-        protected override void OnUpdate(float elapseSeconds, float realElapseSeconds)
-#else
-        protected internal override void OnUpdate(float elapseSeconds, float realElapseSeconds)
-#endif
-        {
-            base.OnUpdate(elapseSeconds, realElapseSeconds);
-        }
-
-        protected override void OnHide(bool isShutdown, object userData)
-        {
-            base.OnHide(isShutdown, userData);
-        }
+        public Transform Transform => CachedTransform;
     }
 }

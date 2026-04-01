@@ -7,8 +7,8 @@ namespace AZUL
     public class ColoredPlaceTokenArea : PlaceTokenArea
     {
         [SerializeField]
-        private PieceColorType colorType;
+        private PieceColorType m_ColorType;
 
-        public PieceColorType ColorType => colorType;
+        public PieceColorType ColorType => m_ColorType;
     }
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace AZUL
 {
-    public enum PlaceTokenPosition : int
+    public enum PlaceTokenPositionGroup : int
     {
         //可手动放置
         Manual = 0,

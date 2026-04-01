@@ -6,6 +6,7 @@ namespace AZUL
 {
     public enum PieceColorType : int
     {
+        Default = 0,
         SpecialToken = 0,
         Blue = 1,
         Yellow = 2,

@@ -7,7 +7,16 @@ using UnityGameFramework.Runtime;
 
 namespace AZUL
 {
-    public class PieceToken : Entity
+    public interface IPieceToken
+    {
+        IPlaceTokenArea OwnerPlaceTokenArea { get; set; }
+
+        bool Interactable { get; set; }
+
+        Transform Transform { get; }
+    }
+
+    public class PieceToken : Entity, IPieceToken
     {
         [SerializeField]
         private PieceTokenData m_PieceTokenData = null;
@@ -21,31 +30,31 @@ namespace AZUL
         }
 
         [SerializeField]
-        private bool m_CanInteractive = true;
-        public bool CanInteractive
-        {
-            get => m_CanInteractive;
-            set=> m_CanInteractive = value;
-        }
-
-        [SerializeField]
-        private PlaceTokenArea m_PlaceTokenArea = null;
-        public PlaceTokenArea OwnerPlaceTokenArea
+        private IPlaceTokenArea m_PlaceTokenArea = null;
+        public IPlaceTokenArea OwnerPlaceTokenArea
         {
             get => m_PlaceTokenArea;
             set => m_PlaceTokenArea = value;
         }
 
+        [SerializeField]
+        private bool m_Interactable = true;
+        public bool Interactable
+        {
+            get => m_Interactable;
+            set=> m_Interactable = value;
+        }
+
+        public Transform Transform => CachedTransform;
+
         private Tween m_SelectTween = null;
         private Tween m_DeselectTween = null;
-        private Tween m_ResetMoveTween = null;
 
         protected override void OnInit(object userData)
         {
             base.OnInit(userData);
             m_SelectTween = null;
             m_DeselectTween = null;
-            m_ResetMoveTween = null;
         }
 
         protected override void OnShow(object userData)
@@ -55,7 +64,7 @@ namespace AZUL
             m_PieceTokenData = userData as PieceTokenData;
             if (m_PieceTokenData == null)
             {
-                //Log.Error("PieceToken data is invalid.");
+                Log.Error("PieceToken data is invalid.");
                 return;
             }
 
@@ -86,34 +95,32 @@ namespace AZUL
             }
         }
 
-        public virtual void OnSelected()
+        public void PlaySelectAnim()
         {
             //表现：向上移动一定距离
-            var area = OwnerPlaceTokenArea;
-            if (area != null)
+            if (OwnerPlaceTokenArea != null)
             {
                 if(m_DeselectTween != null)
                 {
                     m_DeselectTween.Kill();
                     m_DeselectTween = null;
                 }
-                var endPos = area.PlaceDestination + Vector3.up * 0.2f;
+                var endPos = OwnerPlaceTokenArea.PlaceDestination + Vector3.up * 0.2f;
                 
                 m_SelectTween = CachedTransform.DOMove(endPos, 0.2f);
             }
         }
 
-        public virtual void OnDeselected()
+        public void PlayDeselectAnim()
         {
-            var area = OwnerPlaceTokenArea;
-            if (area != null)
+            if (OwnerPlaceTokenArea != null)
             {
                 if (m_SelectTween != null)
                 {
                     m_SelectTween.Kill();
                     m_DeselectTween = null;
                 }
-                var endPos = area.PlaceDestination;
+                var endPos = OwnerPlaceTokenArea.PlaceDestination;
 
                 m_SelectTween = CachedTransform.DOMove(endPos, 0.2f);
             }

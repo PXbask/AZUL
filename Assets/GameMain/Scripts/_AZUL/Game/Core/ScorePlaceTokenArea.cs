@@ -5,37 +5,37 @@ using UnityEngine;
 
 namespace AZUL
 {
-    public class ScorePlaceTokenArea : PlaceTokenArea
+    public sealed class ScorePlaceTokenArea : BasePlaceTokenArea
     {
         [SerializeField]
-        private int score;
+        private int m_Score;
 
         [SerializeField]
-        protected ScorePieceToken scoreToken;
+        private ScorePieceToken m_Token;
 
-        public ScorePieceToken ScoreToken => scoreToken;
-
-        public void PlaceToken(ScorePieceToken pieceToken)
+        public override IPieceToken Token
         {
-            if (pieceToken.OwnerPlaceTokenArea != null)
-            {
-                pieceToken.OwnerPlaceTokenArea.scoreToken = null;
-            }
-            scoreToken = pieceToken;
-            pieceToken.OwnerPlaceTokenArea = this;
+            get { return m_Token; }
+            protected set { m_Token = value as ScorePieceToken; }
+        }
 
-            var curPos = pieceToken.CachedTransform.position;
-            if (Vector3.Distance(curPos, PlaceDestination) < 0.01f)
+        public override Vector3 PlaceDestination => transform.position + Vector3.up * 0.02f;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            Token = null;
+        }
+
+        public override void PlaceToken(IPieceToken pieceToken)
+        {
+            if (pieceToken is not ScorePieceToken)
             {
+                Debug.LogError($"PlaceTokenArea can only place ScorePieceToken, but got {pieceToken.GetType()}");
                 return;
             }
 
-            pieceToken.CachedTransform.DOMove(PlaceDestination, 0.5f).SetEase(Ease.InOutSine);
-        }
-
-        public override void RemoveToken()
-        {
-            scoreToken = null;
+            base.PlaceToken(pieceToken);
         }
     }
 }

@@ -50,16 +50,6 @@ namespace AZUL
                 m_Score = value;
                 if (scoreText != null)
                 {
-                    int index = Mathf.Clamp((m_Score % ScorePlaceTokenAreas.Count) + 1, 0, ScorePlaceTokenAreas.Count - 1);
-                    if(m_Score < ScorePlaceTokenAreas.Count)
-                    {
-                        index = Mathf.Clamp(m_Score, 0, ScorePlaceTokenAreas.Count);
-                    }
-                    else
-                    {
-                        index = Mathf.Clamp((m_Score - 1) % (ScorePlaceTokenAreas.Count - 1) + 1, 0, ScorePlaceTokenAreas.Count - 1);
-                    }
-                    GameEntry.BoardGame.MoveScoreTokenToArea(ScorePieceToken, ScorePlaceTokenAreas[index]);
                     scoreText.text = $"当前分数:{m_Score}";
                 }
             }
@@ -83,7 +73,7 @@ namespace AZUL
                 foreach (var area in row.Areas)
                 {
                     area.Camp = camp;
-                    area.PositionGroup = PlaceTokenPosition.Manual;
+                    area.PositionGroup = PlaceTokenPositionGroup.Manual;
                 }
             }
 
@@ -92,20 +82,20 @@ namespace AZUL
                 foreach (var area in row.Areas)
                 {
                     area.Camp = camp;
-                    area.PositionGroup = PlaceTokenPosition.Colored;
+                    area.PositionGroup = PlaceTokenPositionGroup.Colored;
                 }
             }
 
             foreach (var area in LosePlaceTokenAreas)
             {
                 area.Camp = camp;
-                area.PositionGroup = PlaceTokenPosition.Lose;
+                area.PositionGroup = PlaceTokenPositionGroup.Lose;
             }
 
             foreach (var area in ScorePlaceTokenAreas)
             {
                 area.Camp = camp;
-                area.PositionGroup = PlaceTokenPosition.Score;
+                area.PositionGroup = PlaceTokenPositionGroup.Score;
             }
         }
 
@@ -148,7 +138,7 @@ namespace AZUL
                 {
                     if (area.Token != null)
                     {
-                        res.Add(area.Token);
+                        res.Add(area.Token as PieceToken);
                     }
                 }
             }
@@ -158,7 +148,7 @@ namespace AZUL
                 {
                     if (area.Token != null)
                     {
-                        res.Add(area.Token);
+                        res.Add(area.Token as PieceToken);
                     }
                 }
             }
@@ -166,7 +156,7 @@ namespace AZUL
             {
                 if (area.Token != null)
                 {
-                    res.Add(area.Token);
+                    res.Add(area.Token as PieceToken);
                 }
             }
             return res;
@@ -204,6 +194,36 @@ namespace AZUL
                 data.loseAreas.Add(BoardGameUtility.GetPlaceTokenAreaData(area));
             }
             return data;
+        }
+
+        public void PlayAddScoreAnim(int from,  int to)
+        {
+            if (ScorePieceToken == null)
+            {
+                Debug.LogError("ScorePieceToken is null, cannot play score animation.");
+                return;
+            }
+    
+            var fromArea = GetScorePlaceAreaByScore(from);
+            var toArea = GetScorePlaceAreaByScore(to);
+            if(ScorePieceToken != null && fromArea != null && toArea != null)
+            {
+                toArea.PlaceToken(ScorePieceToken);
+            }
+        }
+
+        private ScorePlaceTokenArea GetScorePlaceAreaByScore(int score)
+        {
+            int index = 0;
+            if (m_Score < ScorePlaceTokenAreas.Count)
+            {
+                index = Mathf.Clamp(m_Score, 0, ScorePlaceTokenAreas.Count);
+            }
+            else
+            {
+                index = Mathf.Clamp((m_Score - 1) % (ScorePlaceTokenAreas.Count - 1) + 1, 0, ScorePlaceTokenAreas.Count - 1);
+            }
+            return ScorePlaceTokenAreas[index];
         }
     }
 }

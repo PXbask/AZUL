@@ -6,7 +6,7 @@ namespace AZUL
 {
     public struct PlaceTokenAreaPosition
     {
-        public PlaceTokenPosition PositionGroup;
+        public PlaceTokenPositionGroup PositionGroup;
         public int Row;
         public int Column;
     }

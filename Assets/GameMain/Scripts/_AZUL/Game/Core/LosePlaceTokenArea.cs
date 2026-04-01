@@ -7,6 +7,8 @@ namespace AZUL
     public class LosePlaceTokenArea : PlaceTokenArea
     {
         [SerializeField]
-        public int losePoint;
+        private int m_LosePoint;
+
+        public int LosePoint => m_LosePoint;
     }
 }

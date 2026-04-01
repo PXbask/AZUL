@@ -246,8 +246,8 @@ namespace AZUL
                     // 尝试获取点击物体上的 PieceToken 组件
                     PieceToken pieceToken = hit.collider.GetComponent<PieceToken>();
 
-                    if (pieceToken != null && pieceToken.CanInteractive && pieceToken.OwnerPlaceTokenArea
-                        && (pieceToken.OwnerPlaceTokenArea.PositionGroup == PlaceTokenPosition.MidTable || pieceToken.OwnerPlaceTokenArea.PositionGroup == PlaceTokenPosition.Factory))
+                    if (pieceToken != null && pieceToken.Interactable && pieceToken.OwnerPlaceTokenArea != null
+                        && (pieceToken.OwnerPlaceTokenArea.GetPositionData().PositionGroup == PlaceTokenPositionGroup.MidTable || pieceToken.OwnerPlaceTokenArea.GetPositionData().PositionGroup == PlaceTokenPositionGroup.Factory))
                     {
                         // 找到了 PieceToken，保存到缓存中
                         SelectPieceToken(pieceToken);
@@ -302,7 +302,7 @@ namespace AZUL
         private void SelectPieceToken(PieceToken pieceToken)
         {
             m_SelectedPieceToken = pieceToken;
-            pieceToken.OnSelected();
+            pieceToken.PlaySelectAnim();
         }
 
         /// <summary>
@@ -320,7 +320,7 @@ namespace AZUL
         {
             if (m_SelectedPieceToken != null)
             {
-                m_SelectedPieceToken.OnDeselected();
+                m_SelectedPieceToken.PlayDeselectAnim();
                 Log.Info("Cleared selected piece. EntityId: {0}", m_SelectedPieceToken.Id);
                 m_SelectedPieceToken = null;
             }
@@ -354,7 +354,7 @@ namespace AZUL
                 return;
             }
             //如果目的地不是手动区域或地板区域，就不能放了；
-            if (posData.PositionGroup != PlaceTokenPosition.Manual && posData.PositionGroup != PlaceTokenPosition.Lose)
+            if (posData.PositionGroup != PlaceTokenPositionGroup.Manual && posData.PositionGroup != PlaceTokenPositionGroup.Lose)
             {
                 Log.Info("Cannot place piece on this area. Position group: {0}", posData.PositionGroup);
                 ClearSelectedPieceTokenWithAnim();
@@ -362,7 +362,7 @@ namespace AZUL
             }
 
             //目标位置是手动区域
-            if (posData.PositionGroup == PlaceTokenPosition.Manual)
+            if (posData.PositionGroup == PlaceTokenPositionGroup.Manual)
             {
                 //如果是手动区域并且对应的颜色区有这个颜色的棋子了，就不能放了；
                 if (BoardGameUtility.PlayerBoardHasColorInColoredAreaInRow(GetBoardWithCurrentComp(), posData.Row, pieceToken.PieceTokenData.ColorType))
@@ -383,7 +383,7 @@ namespace AZUL
                 if (pieceToken.OwnerPlaceTokenArea != null)
                 {
                     //位于工厂区域
-                    if (pieceToken.OwnerPlaceTokenArea.PositionGroup == PlaceTokenPosition.Factory)
+                    if (pieceToken.OwnerPlaceTokenArea.GetPositionData().PositionGroup == PlaceTokenPositionGroup.Factory)
                     {
                         var remainTokens = new List<PieceToken>();
                         var allSameColorTokens = BoardGameUtility.GetAllColorTypeTokenInFactory(pieceToken, out remainTokens);
@@ -398,7 +398,7 @@ namespace AZUL
                             midList[i].PlaceToken(remainTokens[i]);
                         }
                     }
-                    else if (pieceToken.OwnerPlaceTokenArea.PositionGroup == PlaceTokenPosition.MidTable)
+                    else if (pieceToken.OwnerPlaceTokenArea.GetPositionData().PositionGroup == PlaceTokenPositionGroup.MidTable)
                     {
                         //位于中间区域
                         var firstToken = BoardGameUtility.GetFirstTokenInMidArea();
@@ -422,7 +422,7 @@ namespace AZUL
                 if (pieceToken.OwnerPlaceTokenArea != null)
                 {
                     //位于工厂区域
-                    if (pieceToken.OwnerPlaceTokenArea.PositionGroup == PlaceTokenPosition.Factory)
+                    if (pieceToken.OwnerPlaceTokenArea.GetPositionData().PositionGroup == PlaceTokenPositionGroup.Factory)
                     {
                         var remainTokens = new List<PieceToken>();
                         var allSameColorTokens = BoardGameUtility.GetAllColorTypeTokenInFactory(pieceToken, out remainTokens);
@@ -437,7 +437,7 @@ namespace AZUL
                         }
                     }
                     //位于中间区域
-                    else if (pieceToken.OwnerPlaceTokenArea.PositionGroup == PlaceTokenPosition.MidTable)
+                    else if (pieceToken.OwnerPlaceTokenArea.GetPositionData().PositionGroup == PlaceTokenPositionGroup.MidTable)
                     {
                         var firstToken = BoardGameUtility.GetFirstTokenInMidArea();
                         if (firstToken != null)
@@ -689,7 +689,7 @@ namespace AZUL
         /// <param name="pieceToken"></param>
         public void LosePiece(PieceToken pieceToken)
         {
-            pieceToken.CanInteractive = false;
+            pieceToken.Interactable = false;
             if (pieceToken.OwnerPlaceTokenArea != null)
             {
                 pieceToken.OwnerPlaceTokenArea.RemoveToken();
@@ -802,8 +802,11 @@ namespace AZUL
                 {
                     if(area.Token != null)
                     {
-                        LosePiece(area.Token);
-                        area.PlaceToken(token);
+                        if(area.Token is PieceToken pieceToken)
+                        {
+                            LosePiece(pieceToken);
+                            area.PlaceToken(token);
+                        }
                     }
                 }
             }
@@ -855,13 +858,14 @@ namespace AZUL
             {
                 playerBoard = m_OtherBoard;
             }
+            int fromScore = playerBoard.Score;
 
             var pieceRows = BoardGameUtility.GetFilledRowInManualArea(playerBoard);
             foreach (var row in pieceRows)
             {
                 var firstItem = row.Areas[0];
                 var data = firstItem.GetPositionData();
-                var targetArea = BoardGameUtility.GetColoredTileInColoredArea(playerBoard, data.Row, firstItem.Token.PieceTokenData.ColorType);
+                var targetArea = BoardGameUtility.GetColoredTileInColoredArea(playerBoard, data.Row, ((PieceToken)firstItem.Token).PieceTokenData.ColorType);
 
                 //表现：将第一个token放入对应颜色区，其余进入弃牌区
                 if (firstItem.Token != null)
@@ -869,7 +873,8 @@ namespace AZUL
                     targetArea.PlaceToken(firstItem.Token);
                     for (int i = 1; i < row.Areas.Count; i++)
                     {
-                        LosePiece(row.Areas[i].Token);
+                        if(row.Areas[i].Token is PieceToken pieceToken)
+                            LosePiece(pieceToken);
                     }
                 }
 
@@ -885,10 +890,10 @@ namespace AZUL
                 var loseArea = loseAreas[i];
                 if (loseArea.Token != null)
                 {
-                    BoardGameUtility.PlayerAddScore(playerBoard, loseArea.losePoint);
+                    BoardGameUtility.PlayerAddScore(playerBoard, loseArea.LosePoint);
 
                     //如果是首位token，放回中间区域，否则放入弃牌区
-                    if(loseArea.Token.PieceTokenData.ColorType == PieceColorType.SpecialToken)
+                    if(((PieceToken)loseArea.Token).PieceTokenData.ColorType == PieceColorType.SpecialToken)
                     {
                         //谁拥有首位token，下一回合就是谁的先手
                         CurrentPlayer = camp;
@@ -902,10 +907,14 @@ namespace AZUL
                     }
                     else
                     {
-                        LosePiece(loseArea.Token);
+                        if (loseArea.Token is PieceToken pieceToken)
+                            LosePiece(pieceToken);
                     }
                 }
             }
+
+            int toScore = playerBoard.Score;
+            playerBoard.PlayAddScoreAnim(fromScore, toScore);
         }
 
         /// <summary>
@@ -923,11 +932,19 @@ namespace AZUL
         /// </summary>
         public void FinalSettlement()
         {
+            int fromScore, toScore;
+            
+            fromScore = m_SelfBoard.Score;
             var score = BoardGameUtility.CalcualteFinalScoreGened(m_SelfBoard);
             BoardGameUtility.PlayerAddScore(m_SelfBoard, score);
+            toScore = m_SelfBoard.Score;
+            m_SelfBoard.PlayAddScoreAnim(fromScore, toScore);
 
+            fromScore = m_OtherBoard.Score;
             score = BoardGameUtility.CalcualteFinalScoreGened(m_OtherBoard);
             BoardGameUtility.PlayerAddScore(m_OtherBoard, score);
+            toScore = m_OtherBoard.Score;
+            m_OtherBoard.PlayAddScoreAnim(fromScore, toScore);
         }
 
         public PlayerBoard GetWinner()
@@ -1042,19 +1059,6 @@ namespace AZUL
                         onComplete.Invoke();
                         GameEntry.PlayerView.SetMovementActive(true);
                     });
-            }
-        }
-
-        /// <summary>
-        /// 移动分数token到指定区域
-        /// </summary>
-        /// <param name="scorePieceToken"></param>
-        /// <param name="targetArea"></param>
-        public void MoveScoreTokenToArea(ScorePieceToken scorePieceToken, ScorePlaceTokenArea targetArea)
-        {
-            if (scorePieceToken != null && targetArea != null)
-            {
-                targetArea.PlaceToken(scorePieceToken);
             }
         }
 

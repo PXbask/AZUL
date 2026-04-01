@@ -29,14 +29,14 @@ namespace AZUL
                 foreach (var area in factoryDisk.TokenAreas)
                 {
                     area.Camp = camp;
-                    area.PositionGroup = PlaceTokenPosition.Factory;
+                    area.PositionGroup = PlaceTokenPositionGroup.Factory;
                 }
             }
 
             foreach(var centerTokenArea in CenterTokenAreas)
             {
                 centerTokenArea.Camp = camp;
-                centerTokenArea.PositionGroup = PlaceTokenPosition.MidTable;
+                centerTokenArea.PositionGroup = PlaceTokenPositionGroup.MidTable;
             }
         }
 

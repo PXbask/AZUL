@@ -23,7 +23,7 @@ namespace AZUL
                     return !areaList[column].IsEmpty();
                 }
             }
-            Debug.LogError($"Color {color} not found in the colored area of row {row} on the player's board.");
+            //Debug.LogError($"Color {color} not found in the colored area of row {row} on the player's board.");
             return false;
         }
 
@@ -38,7 +38,12 @@ namespace AZUL
         {
             var areaList = boardGame.LeftPlaceTokenAreas[row].Areas;
             var firstArea = areaList[0];
-            return !firstArea.IsEmpty() && firstArea.Token.PieceTokenData.ColorType != color;
+            if (!firstArea.IsEmpty())
+            {
+                var token = firstArea.Token as PieceToken;
+                return token.PieceTokenData.ColorType != color;
+            }
+            return false;
         }
 
         /// <summary>
@@ -50,23 +55,30 @@ namespace AZUL
         {
             var result = new List<PieceToken>();
             remainTokens = new List<PieceToken>();
-            if (pieceToken.OwnerPlaceTokenArea != null && pieceToken.OwnerPlaceTokenArea.PositionGroup == PlaceTokenPosition.Factory)
+            if (pieceToken.OwnerPlaceTokenArea != null && 
+                pieceToken.OwnerPlaceTokenArea.GetPositionData().PositionGroup == PlaceTokenPositionGroup.Factory)
             {
                 foreach (var factory in GameEntry.BoardGame.MidBoard.FactoryDisks)
                 {
-                    if (factory.TokenAreas.Contains(pieceToken.OwnerPlaceTokenArea))
+                    if (factory.TokenAreas.Contains(pieceToken.OwnerPlaceTokenArea as PlaceTokenArea))
                     {
                         foreach (var area in factory.TokenAreas)
                         {
                             if (!area.IsEmpty())
                             {
-                                if (area.Token.PieceTokenData.ColorType == pieceToken.PieceTokenData.ColorType)
+                                var token = area.Token as PieceToken;
+                                if(token == null)
                                 {
-                                    result.Add(area.Token);
+                                    Debug.LogError("工厂区域内存在非棋子Token，数据异常。");
+                                    continue;
+                                }
+                                if (token.PieceTokenData.ColorType == pieceToken.PieceTokenData.ColorType)
+                                {
+                                    result.Add(token);
                                 }
                                 else
                                 {
-                                    remainTokens.Add(area.Token);
+                                    remainTokens.Add(token);
                                 }
                             }
                         }
@@ -78,6 +90,9 @@ namespace AZUL
             return null;
         }
 
+        /// <summary>
+        /// 获取与指定PieceToken颜色相同的所有PieceToken，这些PieceToken必须位于工厂区域内。
+        /// </summary>
         public static List<PieceToken> GetAllColorTypeTokenInFactory(PieceColorType colorType, int factoryId, out List<PieceToken> remainTokens)
         {
             var result = new List<PieceToken>();
@@ -89,13 +104,19 @@ namespace AZUL
                 {
                     if (!area.IsEmpty())
                     {
-                        if (area.Token.PieceTokenData.ColorType == colorType)
+                        var token = area.Token as PieceToken;
+                        if(token == null)
                         {
-                            result.Add(area.Token);
+                            Debug.LogError("工厂区域内存在非棋子Token，数据异常。");
+                            continue;
+                        }
+                        if (token.PieceTokenData.ColorType == colorType)
+                        {
+                            result.Add(token);
                         }
                         else
                         {
-                            remainTokens.Add(area.Token);
+                            remainTokens.Add(token);
                         }
                     }
                 }
@@ -113,27 +134,49 @@ namespace AZUL
         public static List<PieceToken> GetAllColorTypeTokenInMidTable(PieceToken pieceToken)
         {
             var result = new List<PieceToken>();
-            if (pieceToken.OwnerPlaceTokenArea != null && pieceToken.OwnerPlaceTokenArea.PositionGroup == PlaceTokenPosition.MidTable)
+            if (pieceToken.OwnerPlaceTokenArea != null && 
+                pieceToken.OwnerPlaceTokenArea.GetPositionData().PositionGroup == PlaceTokenPositionGroup.MidTable)
             {
                 foreach (var area in GameEntry.BoardGame.MidBoard.CenterTokenAreas)
                 {
-                    if (!area.IsEmpty() && area.Token.PieceTokenData.ColorType == pieceToken.PieceTokenData.ColorType)
+                    if (!area.IsEmpty())
                     {
-                        result.Add(area.Token);
+                        var token = area.Token as PieceToken;
+                        if(token == null)
+                        {
+                            Debug.LogError("中间区域内存在非棋子Token，数据异常。");
+                            continue;
+                        }
+                        if (token.PieceTokenData.ColorType == pieceToken.PieceTokenData.ColorType)
+                        {
+                            result.Add(token);
+                        }
                     }
                 }
             }
             return result;
         }
 
+        /// <summary>
+        /// 获取与指定PieceToken颜色相同的所有PieceToken，这些PieceToken必须位于中部区域内。
+        /// </summary>
         public static List<PieceToken> GetAllColorTypeTokenInMidTable(PieceColorType colorType)
         {
             var result = new List<PieceToken>();
             foreach (var area in GameEntry.BoardGame.MidBoard.CenterTokenAreas)
             {
-                if (!area.IsEmpty() && area.Token.PieceTokenData.ColorType == colorType)
+                if (!area.IsEmpty())
                 {
-                    result.Add(area.Token);
+                    var token = area.Token as PieceToken;
+                    if (token == null)
+                    {
+                        Debug.LogError("中间区域内存在非棋子Token，数据异常。");
+                        continue;
+                    }
+                    if (token.PieceTokenData.ColorType == colorType)
+                    {
+                        result.Add(token);
+                    }
                 }
             }
             return result;
@@ -222,9 +265,18 @@ namespace AZUL
             var areaList = GameEntry.BoardGame.MidBoard.CenterTokenAreas;
             for (int i = 0; i < areaList.Count; i++)
             {
-                if (!areaList[i].IsEmpty() && areaList[i].Token.PieceTokenData.ColorType == PieceColorType.SpecialToken)
+                if (!areaList[i].IsEmpty())
                 {
-                    return areaList[i].Token;
+                    var token = areaList[i].Token as PieceToken;
+                    if (token == null)
+                    {
+                        Debug.LogError("中间区域内存在非棋子Token，数据异常。");
+                        continue;
+                    }
+                    if (token.PieceTokenData.ColorType == PieceColorType.SpecialToken)
+                    {
+                        return token;
+                    }
                 }
             }
             return null;
@@ -578,10 +630,16 @@ namespace AZUL
 
         public static PlaceTokenAreaData GetPlaceTokenAreaData(PlaceTokenArea area)
         {
+            if(area == null) return null;
+            if (!area.IsEmpty() && area.Token is not PieceToken)
+            {
+                Debug.LogError("PlaceTokenArea内的Token不是PieceToken，数据异常。");
+                return null;
+            }
             return new PlaceTokenAreaData
             {
                 empty = area.IsEmpty(),
-                color = area.IsEmpty() ? PieceColorType.SpecialToken : area.Token.PieceTokenData.ColorType
+                color = area.IsEmpty() ? PieceColorType.Default : ((PieceToken)area.Token).PieceTokenData.ColorType
             };
         }
 
@@ -605,7 +663,7 @@ namespace AZUL
                 {
                     if (!area.IsEmpty())
                     {
-                        res.Add(area.Token);
+                        res.Add(area.Token as PieceToken);
                     }
                 }
             }
@@ -614,7 +672,7 @@ namespace AZUL
             {
                 if (!area.IsEmpty())
                 {
-                    res.Add(area.Token);
+                    res.Add(area.Token as PieceToken);
                 }
             }
             return res;
