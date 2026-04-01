@@ -28,7 +28,7 @@ namespace AZUL
         /// <summary>
         /// 目标放置区域（可选）
         /// </summary>
-        public PlaceTokenArea TargetArea { get; set; }
+        public IPlaceTokenArea TargetArea { get; set; }
 
         public PieceTokenData(int entityId, int pieceId) : base(entityId, 10000)
         {

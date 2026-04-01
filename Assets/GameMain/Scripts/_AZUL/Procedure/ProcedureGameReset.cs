@@ -67,7 +67,7 @@ namespace AZUL
             if (!m_ResetStart)
             {
                 m_ResetStart = true;
-                m_BoardGameComponent.GameReset();
+                m_BoardGameComponent.BoardReset();
             }
 
             if (m_ResetCompleted)

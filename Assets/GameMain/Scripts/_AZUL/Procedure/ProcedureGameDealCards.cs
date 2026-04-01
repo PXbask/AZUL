@@ -1,4 +1,5 @@
 using GameFramework.Event;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,8 +11,8 @@ namespace AZUL
     {
         private BoardGameComponent m_BoardGameComponent = null;
 
+        private bool m_DealStart = false;
         private bool m_DealCompleted = false;
-
         private bool m_ResetGame = false;
 
         protected override void OnInit(ProcedureOwner procedureOwner)
@@ -24,12 +25,17 @@ namespace AZUL
             base.OnEnter(procedureOwner);
 
             GameEntry.Event.Subscribe(GameResetEventArgs.EventId, OnGameReset);
+            GameEntry.Event.Subscribe(DealPiecesDoneEventArgs.EventId, OnDealPiecesDone);
 
             m_BoardGameComponent = GameEntry.BoardGame;
+            m_DealStart = false;
             m_DealCompleted = false;
             m_ResetGame = false;
+        }
 
-            GameEntry.Referee.ShowTip("发牌中...");
+        private void OnDealPiecesDone(object sender, GameEventArgs e)
+        {
+            m_DealCompleted = true;
         }
 
         private void OnGameReset(object sender, GameEventArgs e)
@@ -41,32 +47,34 @@ namespace AZUL
         {
             base.OnLeave(procedureOwner, isShutdown);
             GameEntry.Event.Unsubscribe(GameResetEventArgs.EventId, OnGameReset);
+            GameEntry.Event.Unsubscribe(DealPiecesDoneEventArgs.EventId, OnDealPiecesDone);
         }
 
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
 
-            if (!m_DealCompleted)
-            {
-                m_BoardGameComponent.DealPiece();
-                m_DealCompleted = true;
-                if (m_DealCompleted)
-                {
-                    if(m_BoardGameComponent.CurrentPlayer == PlaceAreaCamp.Self)
-                    {
-                        ChangeState<ProcedureGameSelfRound>(procedureOwner);
-                    }
-                    if (m_BoardGameComponent.CurrentPlayer == PlaceAreaCamp.Other)
-                    {
-                        ChangeState<ProcedureGameOtherRound>(procedureOwner);
-                    }
-                }
-            }
-
             if (m_ResetGame)
             {
                 ChangeState<ProcedureGameReset>(procedureOwner);
+            }
+
+            if (!m_DealStart)
+            {
+                m_DealStart = true;
+                m_BoardGameComponent.DealPiece();
+            }
+
+            if (m_DealCompleted)
+            {
+                if (m_BoardGameComponent.CurrentPlayer == PlaceAreaCamp.Self)
+                {
+                    ChangeState<ProcedureGameSelfRound>(procedureOwner);
+                }
+                if (m_BoardGameComponent.CurrentPlayer == PlaceAreaCamp.Other)
+                {
+                    ChangeState<ProcedureGameOtherRound>(procedureOwner);
+                }
             }
         }
     }

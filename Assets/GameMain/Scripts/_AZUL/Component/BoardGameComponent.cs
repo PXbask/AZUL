@@ -96,6 +96,7 @@ namespace AZUL
         public bool FightwithAI => GameEntry.AI.IsRunning();
 
         private Sequence m_ClearTableSequence = null;
+        private Sequence m_DealPiecesSequence = null;
 
         protected override void Awake()
         {
@@ -106,6 +107,7 @@ namespace AZUL
             m_Interactive = false;
 
             m_ClearTableSequence = null;
+            m_DealPiecesSequence= null;
         }
 
         #region 事件订阅与取消
@@ -129,6 +131,13 @@ namespace AZUL
         private void OnShowEntitySuccess(object sender, GameEventArgs e)
         {
             ShowEntitySuccessEventArgs ne = (ShowEntitySuccessEventArgs)e;
+
+            //如果当前流程是游戏重置流程，立即隐藏实体
+            if (GameEntry.Procedure.CurrentProcedure is ProcedureGameReset)
+            {
+                GameEntry.Entity.HideEntity(ne.Entity.Id);
+                return;
+            }
 
             // 检查是否是我们创建的棋子实体
             if (ne.EntityLogicType == typeof(PieceToken))
@@ -158,6 +167,7 @@ namespace AZUL
                 {
                     data.TargetArea.PlaceToken(pieceToken);
                 }
+
                 //指定玩家的分数token
                 if (data.TargetArea.Camp == PlaceAreaCamp.Self)
                 {
@@ -540,17 +550,24 @@ namespace AZUL
         }
 
         /// <summary>
-        /// 重置游戏
+        /// 重置棋盘
         /// </summary>
-        public void GameReset()
+        public void BoardReset()
         {
             m_Interactive = false;
+
+            if(m_DealPiecesSequence != null)
+            {
+                m_DealPiecesSequence.Kill();
+                m_DealPiecesSequence = null;
+            }
 
             //动画表现：棋子飞回棋子袋并隐藏
             ClearAllPieceTokens();
 
             RemainPieceIds.Clear();
             LostPieceIds.Clear();
+
             IDataTable<DRPiece> dtPiece = GameEntry.DataTable.GetDataTable<DRPiece>();
             foreach (DRPiece piece in dtPiece.GetAllDataRows())
             {
@@ -570,29 +587,40 @@ namespace AZUL
         public void DealPiece()
         {
             m_Interactive = false;
+
             if (!m_Running)
             {
                 Log.Error("BoardGameComponent is not active. Please call GameReset() before dealing pieces.");
                 return;
             }
 
-            //生成分数token
-            if(m_SelfBoard.ScorePieceToken == null)
+            //正常来说不会出现这种情况
+            if (m_DealPiecesSequence != null)
+            {
+                Log.Fatal("m_DealPiecesSequence is running when dealpiece");
+                m_DealPiecesSequence.Kill();
+                m_DealPiecesSequence = null;
+            }
+            m_DealPiecesSequence = DOTween.Sequence();
+
+            //快速生成分数token和首位token
+            if (m_SelfBoard.ScorePieceToken == null)
             {
                 var zeroScoreArea_self = BoardGameUtility.GetScorePlaceTokenArea(m_SelfBoard, 0);
-                SpawnScorePieceAndPlace(zeroScoreArea_self);
+                SpawnScorePieceToken(zeroScoreArea_self);
             }
             if (m_OtherBoard.ScorePieceToken == null)
             {
                 var zeroScoreArea_other = BoardGameUtility.GetScorePlaceTokenArea(m_OtherBoard, 0);
-                SpawnScorePieceAndPlace(zeroScoreArea_other);
+                SpawnScorePieceToken(zeroScoreArea_other);
             }
 
             if (RemainPieceIds.Remove(0))  // 假设0是一个特殊的棋子ID，代表空棋子或占位符，不需要发牌
             {
-                SpawnPieceAndPlace(0, GetRemainSlotFromMidDisk());
+                SpawnPieceToken(0, GetRemainSlotFromMidDisk());
             }
 
+            //分发到工厂圆盘的棋子有动画
             var midDiskSlots = m_MidBoard.FactoryDisks.SelectMany(disk => disk.TokenAreas).ToList();
             if(RemainPieceIds.Count < midDiskSlots.Count)
             {
@@ -603,14 +631,29 @@ namespace AZUL
             var randomTokens = TakeRandomPieces(midDiskSlots.Count);
             for (int i = 0; i < randomTokens.Count; i++)
             {
-                SpawnPieceAndPlace(randomTokens[i], midDiskSlots[i]);
+                m_DealPiecesSequence.AppendInterval(0.15f);
+                var tmp_token = randomTokens[i];
+                var tmp_slot = midDiskSlots[i];
+                m_DealPiecesSequence.AppendCallback(() =>
+                {
+                    SpawnPieceToken(tmp_token, tmp_slot);
+                });
             }
+
+            m_DealPiecesSequence.onComplete += () =>
+            {
+                GameEntry.Event.Fire(this, DealPiecesDoneEventArgs.Create());
+                Log.Info("Deal pieces completed");
+            };
+            m_DealPiecesSequence.Play();
+
+            GameEntry.Referee.ShowTip("正在发牌...");
         }
 
         /// <summary>
         /// 生成棋子并放置到指定区域
         /// </summary>
-        private void SpawnPieceAndPlace(int pieceId, PlaceTokenArea placeTokenArea)
+        private void SpawnPieceToken(int pieceId, PlaceTokenArea placeTokenArea)
         {
             int entityId = GameEntry.Entity.GenerateSerialId();
             GameEntry.Entity.ShowPieceToken(new PieceTokenData(entityId, pieceId)
@@ -620,7 +663,7 @@ namespace AZUL
             });
         }
 
-        private void SpawnScorePieceAndPlace(ScorePlaceTokenArea placeTokenArea)
+        private void SpawnScorePieceToken(ScorePlaceTokenArea placeTokenArea)
         {
             int entityId = GameEntry.Entity.GenerateSerialId();
             GameEntry.Entity.ShowScorePieceToken(new ScorePieceTokenData(entityId)
@@ -1021,7 +1064,7 @@ namespace AZUL
                 }
             }
 
-            m_ClearTableSequence.OnKill(() =>
+            m_ClearTableSequence.OnComplete(() =>
             {
                 GameEntry.Event.Fire(this, ClearTableDoneEventArgs.Create());
                 Log.Info("All piece tokens have been cleared from the board.");

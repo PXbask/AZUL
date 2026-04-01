@@ -72,12 +72,9 @@ namespace AZUL
 
         public virtual IPieceToken Token { get; protected set; }
 
-        private Tween m_PlaceTokenTween = null;
-
         protected virtual void Awake()
         {
             Token = null;
-            m_PlaceTokenTween = null;
         }
 
         public bool IsEmpty()
@@ -87,32 +84,8 @@ namespace AZUL
 
         public virtual void PlaceToken(IPieceToken pieceToken)
         {
-            if (m_PlaceTokenTween != null)
-            {
-                m_PlaceTokenTween.Kill();
-                m_PlaceTokenTween = null;
-            }
-
-            if (pieceToken.OwnerPlaceTokenArea != null)
-            {
-                pieceToken.OwnerPlaceTokenArea.RemoveToken();
-            }
+            pieceToken.GotoArea(this);
             Token = pieceToken;
-            pieceToken.OwnerPlaceTokenArea = this;
-
-            var curPos = pieceToken.Transform.position;
-            if (Vector3.Distance(curPos, PlaceDestination) < 0.01f)
-            {
-                return;
-            }
-
-            pieceToken.Interactable = false;
-            m_PlaceTokenTween = pieceToken.Transform.DOMove(PlaceDestination, 0.5f).SetEase(Ease.InOutSine);
-            m_PlaceTokenTween.onKill += () =>
-            {
-                pieceToken.Interactable = true;
-                pieceToken.Transform.position = PlaceDestination;
-            };
         }
 
         public PlaceTokenAreaPosition GetPositionData()
@@ -127,11 +100,7 @@ namespace AZUL
 
         public void RemoveToken()
         {
-            if (Token != null)
-            {
-                Token.OwnerPlaceTokenArea = null;
-                Token = null;
-            }
+            Token = null;
         }
     }
 }
