@@ -468,9 +468,7 @@ namespace AZUL
                 }
             }
 
-            var tmpPlayer = CurrentPlayer;
-            SwitchPlayer();
-            GameEntry.Event.Fire(this, MovePieceCompleteEventArgs.Create(null, null, null, tmpPlayer));
+            GameEntry.Event.Fire(this, MovePieceCompleteEventArgs.Create(null, null, null, CurrentPlayer));
             ClearSelectedPieceToken();
         }
 
@@ -597,7 +595,6 @@ namespace AZUL
             //正常来说不会出现这种情况
             if (m_DealPiecesSequence != null)
             {
-                Log.Fatal("m_DealPiecesSequence is running when dealpiece");
                 m_DealPiecesSequence.Kill();
                 m_DealPiecesSequence = null;
             }
@@ -728,6 +725,19 @@ namespace AZUL
             {
                 return m_OtherBoard;
             }
+        }
+
+        public PlayerBoard GetPlayerBoardByComp(PlaceAreaCamp camp)
+        {
+            if (camp == PlaceAreaCamp.Self)
+            {
+                return m_SelfBoard;
+            }
+            if (camp == PlaceAreaCamp.Other)
+            {
+                return m_OtherBoard;
+            }
+            return null;
         }
 
         /// <summary>
@@ -863,7 +873,7 @@ namespace AZUL
             }
         }
 
-        private void SwitchPlayer()
+        public void SwitchPlayer()
         {
             if (CurrentPlayer == PlaceAreaCamp.Self)
             {
@@ -882,6 +892,19 @@ namespace AZUL
             return BoardGameUtility.FactorysEmpty() && BoardGameUtility.MidTableEmpty();
         }
 
+        public void StepSettle()
+        {
+            int fromScore_self = m_SelfBoard.Score;
+            int fromScore_other = m_OtherBoard.Score;
+            MoveFilledRowInManualAreaToColoredArea();
+            MoveLoseAreaTokensToBag();
+            int toScore_self = m_SelfBoard.Score;
+            int toScore_other = m_OtherBoard.Score;
+
+            m_SelfBoard.PlayAddScoreAnim(fromScore_self, toScore_self);
+            m_OtherBoard.PlayAddScoreAnim(fromScore_other, toScore_other);
+        }
+
         /// <summary>
         /// 如果没有则将双方填满的手动区移动到颜色区,并计算分数
         /// </summary>
@@ -894,18 +917,14 @@ namespace AZUL
             MoveFilledRowInManualAreaToColoredAreaPerPlayer(PlaceAreaCamp.Other);
         }
 
-        public void MoveFilledRowInManualAreaToColoredAreaPerPlayer(PlaceAreaCamp camp)
+        private void MoveFilledRowInManualAreaToColoredAreaPerPlayer(PlaceAreaCamp camp)
         {
-            PlayerBoard playerBoard = null;
-            if(camp == PlaceAreaCamp.Self)
+            PlayerBoard playerBoard = GetPlayerBoardByComp(camp);
+            if(playerBoard == null)
             {
-                playerBoard = m_SelfBoard;
+                Log.Error("PlayerBoard is null for camp: {0}", camp);
+                return;
             }
-            else if(camp == PlaceAreaCamp.Other)
-            {
-                playerBoard = m_OtherBoard;
-            }
-            int fromScore = playerBoard.Score;
 
             var pieceRows = BoardGameUtility.GetFilledRowInManualArea(playerBoard);
             foreach (var row in pieceRows)
@@ -929,6 +948,28 @@ namespace AZUL
                 int stepScore = BoardGameUtility.CalculateScorePieceMoveToColoredArea(playerBoard, targetArea);
                 BoardGameUtility.PlayerAddScore(playerBoard, stepScore);
             }
+        }
+
+        /// <summary>
+        /// 将地板区的棋子移回棋子袋
+        /// </summary>
+        private void MoveLoseAreaTokensToBag()
+        {
+            //先移动自己的
+            MoveLoseAreaTokensToBagPerPlayer(PlaceAreaCamp.Self);
+
+            //再移动对手的
+            MoveLoseAreaTokensToBagPerPlayer(PlaceAreaCamp.Other);
+        }
+
+        private void MoveLoseAreaTokensToBagPerPlayer(PlaceAreaCamp camp)
+        {
+            PlayerBoard playerBoard = GetPlayerBoardByComp(camp);
+            if (playerBoard == null)
+            {
+                Log.Error("PlayerBoard is null for camp: {0}", camp);
+                return;
+            }
 
             //然后计算减分区
             var loseAreas = BoardGameUtility.GetAllFilledAreaInLoseArea(playerBoard);
@@ -940,13 +981,13 @@ namespace AZUL
                     BoardGameUtility.PlayerAddScore(playerBoard, loseArea.LosePoint);
 
                     //如果是首位token，放回中间区域，否则放入弃牌区
-                    if(((PieceToken)loseArea.Token).PieceTokenData.ColorType == PieceColorType.SpecialToken)
+                    if (((PieceToken)loseArea.Token).PieceTokenData.ColorType == PieceColorType.SpecialToken)
                     {
                         //谁拥有首位token，下一回合就是谁的先手
                         CurrentPlayer = camp;
 
                         var midArea = BoardGameUtility.GetEmptyTokenAreaInMidArea(1);
-                        if(midArea.Count > 0)
+                        if (midArea.Count > 0)
                         {
                             midArea[0].PlaceToken(loseArea.Token);
                             loseArea.RemoveToken();
@@ -959,9 +1000,6 @@ namespace AZUL
                     }
                 }
             }
-
-            int toScore = playerBoard.Score;
-            playerBoard.PlayAddScoreAnim(fromScore, toScore);
         }
 
         /// <summary>

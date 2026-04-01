@@ -24,6 +24,8 @@ namespace AZUL
         {
             base.OnEnter(procedureOwner);
             m_BoardGameComponent = GameEntry.BoardGame;
+            m_BoardGameComponent.CurrentPlayer = PlaceAreaCamp.Other;
+
             m_BoardGameComponent.m_Interactive = !m_BoardGameComponent.FightwithAI;
             m_ShouldChange = false;
             m_ResetGame = false;
@@ -82,28 +84,31 @@ namespace AZUL
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
 
+            if (m_ResetGame)
+            {
+                ChangeState<ProcedureGameReset>(procedureOwner);
+            }
+
             if (m_ShouldChange)
             {
-                m_ShouldChange = false;
                 //先判断当前桌子上是否还有棋子，如果没有则将双方填满的手动区移动到颜色区
                 if (m_BoardGameComponent.MidFactoryAreaEmpty())
                 {
                     ChangeState<ProcedureGameStepSettle>(procedureOwner);
                     return;
                 }
+
                 if (m_BoardGameComponent.CurrentPlayer == PlaceAreaCamp.Self)
                 {
-                    ChangeState<ProcedureGameSelfRound>(procedureOwner);
+                    ChangeState<ProcedureGameOtherRound>(procedureOwner);
+                    return;
                 }
+
                 if (m_BoardGameComponent.CurrentPlayer == PlaceAreaCamp.Other)
                 {
-                    ChangeState<ProcedureGameOtherRound>(procedureOwner);
+                    ChangeState<ProcedureGameSelfRound>(procedureOwner);
+                    return;
                 }
-            }
-
-            if (m_ResetGame)
-            {
-                ChangeState<ProcedureGameReset>(procedureOwner);
             }
         }
 
@@ -118,12 +123,10 @@ namespace AZUL
             {
                 m_ShouldChange = true;
                 m_BoardGameComponent.m_Interactive = false; // 禁止交互，等待流程切换完成
-                return; // 只处理自己回合的棋子移动完成事件
             }
             else
             {
                 Log.Error("当前流程存在错误");
-                return;
             }
         }
     }

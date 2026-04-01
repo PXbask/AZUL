@@ -11,7 +11,7 @@ namespace AZUL
     {
         private BoardGameComponent m_BoardGameComponent = null;
 
-        private bool m_Settle;
+        private bool m_SettleStart;
         private bool m_ResetGame = false;
         protected override void OnInit(ProcedureOwner procedureOwner)
         {
@@ -25,7 +25,8 @@ namespace AZUL
 
             m_BoardGameComponent = GameEntry.BoardGame;
             m_BoardGameComponent.m_Interactive = false;
-            m_Settle = false;
+
+            m_SettleStart = false;
             m_ResetGame=false;
 
             GameEntry.Referee.ShowTip("桌上没有棋子了, 即将结算...");
@@ -46,29 +47,28 @@ namespace AZUL
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
 
-            if (!m_Settle)
-            {
-                m_BoardGameComponent.MoveFilledRowInManualAreaToColoredArea();
-                //判断是否满足结束条件：存在某一玩家的颜色区的横排全部填满
-                bool res = m_BoardGameComponent.ExistColoredAreaRowFullFilled();
-                m_Settle = true;
-                if (m_Settle)
-                {
-                    if (res)
-                    {
-                        ChangeState<ProcedureGameFinalSettle>(procedureOwner);
-                    }
-                    else
-                    {
-                        //重新发牌
-                        ChangeState<ProcedureGameDealCards>(procedureOwner);
-                    }
-                }
-            }
-
             if (m_ResetGame)
             {
                 ChangeState<ProcedureGameReset>(procedureOwner);
+            }
+
+            if (!m_SettleStart)
+            {
+                m_BoardGameComponent.StepSettle();
+                //判断是否满足结束条件：存在某一玩家的颜色区的横排全部填满
+                bool matchGameOverCondition = m_BoardGameComponent.ExistColoredAreaRowFullFilled();
+
+                m_SettleStart = true;
+
+                if (matchGameOverCondition)
+                {
+                    ChangeState<ProcedureGameFinalSettle>(procedureOwner);
+                }
+                else
+                {
+                    //重新发牌
+                    ChangeState<ProcedureGameDealCards>(procedureOwner);
+                }
             }
         }
     }

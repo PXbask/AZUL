@@ -46,6 +46,11 @@ namespace AZUL
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
 
+            if (m_ResetGame)
+            {
+                ChangeState<ProcedureGameReset>(procedureOwner);
+            }
+
             if (!m_FinalSettle)
             {
                 m_BoardGameComponent.FinalSettlement();
@@ -54,11 +59,6 @@ namespace AZUL
                 {
                     ChangeState<ProcedureGameSettlePanel>(procedureOwner);
                 }
-            }
-
-            if (m_ResetGame)
-            {
-                ChangeState<ProcedureGameReset>(procedureOwner);
             }
         }
     }
