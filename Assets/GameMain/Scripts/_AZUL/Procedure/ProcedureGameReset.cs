@@ -1,3 +1,5 @@
+using GameFramework.Event;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,7 +14,10 @@ namespace AZUL
     {
         private BoardGameComponent m_BoardGameComponent = null;
 
+        private bool m_ResetStart = false;
         private bool m_ResetCompleted = false;
+        private bool m_Flag = false;
+        private bool m_GameReset = false;
 
         protected override void OnInit(ProcedureOwner procedureOwner)
         {
@@ -22,27 +27,54 @@ namespace AZUL
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
-            m_BoardGameComponent = GameEntry.BoardGame;
-            m_ResetCompleted = false;
+            GameEntry.Event.Subscribe(ClearTableDoneEventArgs.EventId, OnClearTableDone);
+            GameEntry.Event.Subscribe(GameResetEventArgs.EventId, OnGameReset);
 
-            GameEntry.Referee.ShowTip("正在整理桌面...");
+            m_BoardGameComponent = GameEntry.BoardGame;
+
+            m_Flag = false;
+            m_ResetStart = false;
+            m_ResetCompleted = false;
+            m_GameReset = false;
+        }
+
+        private void OnGameReset(object sender, GameEventArgs e)
+        {
+            m_GameReset=true;
+        }
+
+        private void OnClearTableDone(object sender, GameEventArgs e)
+        {
+            m_ResetCompleted = true;
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
             base.OnLeave(procedureOwner, isShutdown);
+            GameEntry.Event.Unsubscribe(ClearTableDoneEventArgs.EventId, OnClearTableDone);
+            GameEntry.Event.Unsubscribe(GameResetEventArgs.EventId, OnGameReset);
         }
 
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
 
-            if (!m_ResetCompleted)
+            if (m_GameReset)
             {
+                ChangeState<ProcedureGameReset>(procedureOwner);
+            }
+
+            if (!m_ResetStart)
+            {
+                m_ResetStart = true;
                 m_BoardGameComponent.GameReset();
-                m_ResetCompleted = true;
-                if (m_ResetCompleted)
+            }
+
+            if (m_ResetCompleted)
+            {
+                if (!m_Flag)
                 {
+                    m_Flag = true;
                     ChangeState<ProcedureGameDealCards>(procedureOwner);
                 }
             }

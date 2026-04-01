@@ -95,6 +95,8 @@ namespace AZUL
         public bool m_Interactive { get; set; }
         public bool FightwithAI => GameEntry.AI.IsRunning();
 
+        private Sequence m_ClearTableSequence = null;
+
         protected override void Awake()
         {
             base.Awake();
@@ -102,6 +104,8 @@ namespace AZUL
             m_HasRegisterEvent = false;
 
             m_Interactive = false;
+
+            m_ClearTableSequence = null;
         }
 
         #region 事件订阅与取消
@@ -542,7 +546,7 @@ namespace AZUL
         {
             m_Interactive = false;
 
-            // 清除所有在场的棋子实体
+            //动画表现：棋子飞回棋子袋并隐藏
             ClearAllPieceTokens();
 
             RemainPieceIds.Clear();
@@ -980,40 +984,19 @@ namespace AZUL
         /// </summary>
         private void ClearAllPieceTokens()
         {
-            //var allEntitys = BoardGameUtility.GetAllPiecesInBoard();
-            //foreach(var entity in allEntitys)
-            //{
-            //    var pieceToken = entity as PieceToken;
-            //    if (pieceToken)
-            //    {
-            //        // 清除棋子与放置区域的关联
-            //        if (pieceToken.OwnerPlaceTokenArea != null)
-            //        {
-            //            pieceToken.OwnerPlaceTokenArea.RemoveToken();
-            //            pieceToken.OwnerPlaceTokenArea = null;
-            //        }
-            //        var tween = pieceToken.CachedTransform.DOMove(m_PieceBag.position, 0.5f).SetEase(Ease.InBack);
-            //        tween.onComplete += () =>
-            //        {
-            //            GameEntry.Entity.HideEntity(pieceToken);
-            //        };
-            //        tween.onKill += () =>
-            //        {
-            //            GameEntry.Entity.HideEntity(pieceToken);
-            //        };
-            //    }
-            //}
-
-
-
-            // 获取所有已加载的实体
-            var allEntities = GameEntry.Entity.GetAllLoadedEntities();
-
-            // 遍历并隐藏所有 PieceToken 类型的实体
-            foreach (var entity in allEntities)
+            if(m_ClearTableSequence != null)
             {
-                var pieceToken = entity.GetComponent<PieceToken>();
-                if (pieceToken)
+                m_ClearTableSequence.Kill();
+                m_ClearTableSequence = null;
+            }
+            m_ClearTableSequence = DOTween.Sequence();
+
+            var allEntitys = BoardGameUtility.GetAllPiecesInBoard();
+            for(int i = 0; i < allEntitys.Count; i++)
+            {
+                var entity = allEntitys[i];
+                var pieceToken = entity as IPieceToken;
+                if (pieceToken != null)
                 {
                     // 清除棋子与放置区域的关联
                     if (pieceToken.OwnerPlaceTokenArea != null)
@@ -1022,26 +1005,31 @@ namespace AZUL
                         pieceToken.OwnerPlaceTokenArea = null;
                     }
 
-                    // 隐藏实体
-                    GameEntry.Entity.HideEntity(pieceToken);
-                }
-
-                var scorePieceToken = entity.GetComponent<ScorePieceToken>();
-                if (scorePieceToken)
-                {
-                    // 清除棋子与放置区域的关联
-                    if (scorePieceToken.OwnerPlaceTokenArea != null)
+                    var tween = pieceToken.Transform.DOMove(m_PieceBag.position, 0.5f).SetEase(Ease.InBack);
+                    pieceToken.Interactable = false;
+                    tween.onKill += () =>
                     {
-                        scorePieceToken.OwnerPlaceTokenArea.RemoveToken();
-                        scorePieceToken.OwnerPlaceTokenArea = null;
-                    }
+                        pieceToken.Interactable = true;
+                        GameEntry.Entity.HideEntity(entity);
+                    };
 
-                    // 隐藏实体
-                    GameEntry.Entity.HideEntity(scorePieceToken);
+                    m_ClearTableSequence.Insert(0.15f * i, tween);
+                }
+                else
+                {
+                    Log.Error("Entity with ID {0} does not have a PieceToken component.", entity.Id);
                 }
             }
 
-            Log.Info("Cleared all piece tokens. Total entities: {0}", allEntities.Length);
+            m_ClearTableSequence.OnKill(() =>
+            {
+                GameEntry.Event.Fire(this, ClearTableDoneEventArgs.Create());
+                Log.Info("All piece tokens have been cleared from the board.");
+            });
+            m_ClearTableSequence.Play();
+            GameEntry.Referee.ShowTip("正在清理桌面...");
+
+            Log.Info("Start Cleared all piece tokens. Total entities: {0}", allEntitys.Count);
         }
 
         /// <summary>
