@@ -628,7 +628,7 @@ namespace AZUL
             var randomTokens = TakeRandomPieces(midDiskSlots.Count);
             for (int i = 0; i < randomTokens.Count; i++)
             {
-                m_DealPiecesSequence.AppendInterval(0.15f);
+                m_DealPiecesSequence.AppendInterval(0.05f);
                 var tmp_token = randomTokens[i];
                 var tmp_slot = midDiskSlots[i];
                 m_DealPiecesSequence.AppendCallback(() =>
@@ -1094,7 +1094,7 @@ namespace AZUL
                         GameEntry.Entity.HideEntity(entity);
                     };
 
-                    m_ClearTableSequence.Insert(0.15f * i, tween);
+                    m_ClearTableSequence.Insert(0.05f * i, tween);
                 }
                 else
                 {
@@ -1209,9 +1209,7 @@ namespace AZUL
                 }
             }
 
-            var tmpPlayer = CurrentPlayer;
-            SwitchPlayer();
-            GameEntry.Event.Fire(this, MovePieceCompleteEventArgs.Create(null, null, null, tmpPlayer));
+            GameEntry.Event.Fire(this, MovePieceCompleteEventArgs.Create(null, null, null, CurrentPlayer));
             ClearSelectedPieceToken();
         }
     }
