@@ -1,3 +1,4 @@
+using GameFramework.DataTable;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -625,7 +626,69 @@ namespace AZUL
             resData.me = GameEntry.BoardGame.GetPlayerBoard(PlaceAreaCamp.Other).GetPlayerBoardData();
             resData.opponents = new List<PlayerBoardData>();
             resData.opponents.Add(GameEntry.BoardGame.GetPlayerBoard(PlaceAreaCamp.Self).GetPlayerBoardData());
+            resData.remainTokens = GetTokenInfoInBag();
+            resData.loseTokens = GetTokenInfoInLose();
             return resData;
+        }
+
+        /// <summary>
+        /// 获取游戏盒内的棋子数量信息
+        /// </summary>
+        public static List<TokenNumberData> GetTokenInfoInBag()
+        {
+            var dic = new Dictionary<PieceColorType, int>();
+
+            IDataTable<DRPiece> dtPiece = GameEntry.DataTable.GetDataTable<DRPiece>();
+            foreach (var id in GameEntry.BoardGame.RemainPieceIDs)
+            {
+                var data = dtPiece.GetDataRow(id);
+                if(dic.ContainsKey(data.Color))
+                {
+                    dic[data.Color]++;
+                }
+                else
+                {
+                    dic[data.Color] = 1;
+                }
+            }
+
+            var res = new List<TokenNumberData>();
+            foreach(var kvp in dic)
+            {
+                res.Add(new TokenNumberData { color = kvp.Key, number = kvp.Value });
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// 获取弃牌区内的棋子数量信息
+        /// </summary>
+        public static List<TokenNumberData> GetTokenInfoInLose()
+        {
+            var dic = new Dictionary<PieceColorType, int>();
+
+            IDataTable<DRPiece> dtPiece = GameEntry.DataTable.GetDataTable<DRPiece>();
+            foreach (var id in GameEntry.BoardGame.LostPieceIDs)
+            {
+                var data = dtPiece.GetDataRow(id);
+                if (dic.ContainsKey(data.Color))
+                {
+                    dic[data.Color]++;
+                }
+                else
+                {
+                    dic[data.Color] = 1;
+                }
+            }
+
+            var res = new List<TokenNumberData>();
+            foreach (var kvp in dic)
+            {
+                res.Add(new TokenNumberData { color = kvp.Key, number = kvp.Value });
+            }
+
+            return res;
         }
 
         public static PlaceTokenAreaData GetPlaceTokenAreaData(PlaceTokenArea area)

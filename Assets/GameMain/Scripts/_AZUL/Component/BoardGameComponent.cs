@@ -62,12 +62,14 @@ namespace AZUL
         /// <summary>
         /// 剩余的棋子Id
         /// </summary>
-        private List<int> RemainPieceIds = new List<int>();
+        private List<int> m_RemainPieceIds = new List<int>();
+        public List<int> RemainPieceIDs => m_RemainPieceIds;
 
         /// <summary>
         /// 放入弃牌区的棋子Id
         /// </summary>
-        private List<int> LostPieceIds = new List<int>();
+        private List<int> m_LostPieceIds = new List<int>();
+        public List<int> LostPieceIDs => m_LostPieceIds;
 
         public MidBoard MidBoard => m_MidBoard;
 
@@ -563,13 +565,13 @@ namespace AZUL
             //动画表现：棋子飞回棋子袋并隐藏
             ClearAllPieceTokens();
 
-            RemainPieceIds.Clear();
-            LostPieceIds.Clear();
+            m_RemainPieceIds.Clear();
+            m_LostPieceIds.Clear();
 
             IDataTable<DRPiece> dtPiece = GameEntry.DataTable.GetDataTable<DRPiece>();
             foreach (DRPiece piece in dtPiece.GetAllDataRows())
             {
-                RemainPieceIds.Add(piece.Id);
+                m_RemainPieceIds.Add(piece.Id);
             }
 
             //默认先手玩家为自己
@@ -612,18 +614,18 @@ namespace AZUL
                 SpawnScorePieceToken(zeroScoreArea_other);
             }
 
-            if (RemainPieceIds.Remove(0))  // 假设0是一个特殊的棋子ID，代表空棋子或占位符，不需要发牌
+            if (m_RemainPieceIds.Remove(0))  // 假设0是一个特殊的棋子ID，代表空棋子或占位符，不需要发牌
             {
                 SpawnPieceToken(0, GetRemainSlotFromMidDisk());
             }
 
             //分发到工厂圆盘的棋子有动画
             var midDiskSlots = m_MidBoard.FactoryDisks.SelectMany(disk => disk.TokenAreas).ToList();
-            if(RemainPieceIds.Count < midDiskSlots.Count)
+            if(m_RemainPieceIds.Count < midDiskSlots.Count)
             {
                 //将弃牌区棋子全部放回棋子袋
-                RemainPieceIds.AddRange(LostPieceIds);
-                LostPieceIds.Clear();
+                m_RemainPieceIds.AddRange(m_LostPieceIds);
+                m_LostPieceIds.Clear();
             }
             var randomTokens = TakeRandomPieces(midDiskSlots.Count);
             for (int i = 0; i < randomTokens.Count; i++)
@@ -694,16 +696,16 @@ namespace AZUL
         private List<int> TakeRandomPieces(int count)
         {
             // 如果请求数量超过剩余数量，则只取剩余的全部
-            int actualCount = Mathf.Min(count, RemainPieceIds.Count);
+            int actualCount = Mathf.Min(count, m_RemainPieceIds.Count);
 
             List<int> result = new List<int>(actualCount);
 
             // 随机抽取 n 次
             for (int i = 0; i < actualCount; i++)
             {
-                int randomIndex = UnityEngine.Random.Range(0, RemainPieceIds.Count);
-                result.Add(RemainPieceIds[randomIndex]);
-                RemainPieceIds.RemoveAt(randomIndex);
+                int randomIndex = UnityEngine.Random.Range(0, m_RemainPieceIds.Count);
+                result.Add(m_RemainPieceIds[randomIndex]);
+                m_RemainPieceIds.RemoveAt(randomIndex);
             }
 
             return result;
@@ -758,7 +760,7 @@ namespace AZUL
                 GameEntry.Entity.HideEntity(pieceToken.Id);
             });
 
-            LostPieceIds.Add(pieceToken.PieceTokenData.PieceId);
+            m_LostPieceIds.Add(pieceToken.PieceTokenData.PieceId);
         }
 
         /// <summary>

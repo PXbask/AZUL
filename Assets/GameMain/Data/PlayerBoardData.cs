@@ -27,6 +27,33 @@ namespace AZUL
         /// 其他人的版图信息
         /// </summary>
         public List<PlayerBoardData> opponents;
+
+        /// <summary>
+        /// 游戏盒内的剩余砖块信息
+        /// </summary>
+        public List<TokenNumberData> remainTokens;
+
+        /// <summary>
+        /// 弃牌区的砖块信息
+        /// </summary>
+        public List<TokenNumberData> loseTokens;
+    }
+
+    /// <summary>
+    /// 游戏盒内棋子信息
+    /// </summary>
+    [SerializeField]
+    public class TokenNumberData
+    {
+        /// <summary>
+        /// 棋子颜色
+        /// </summary>
+        public PieceColorType color;
+
+        /// <summary>
+        /// 剩余数量
+        /// </summary>
+        public int number;
     }
 
     [Serializable]

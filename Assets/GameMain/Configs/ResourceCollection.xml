@@ -37,11 +37,16 @@
       <Resource Name="Materials/AZUL/block_yellow_mat" LoadType="0" Packed="False" />
       <Resource Name="Materials/AZUL/board_mat" LoadType="0" Packed="False" />
       <Resource Name="Materials/AZUL/table_mat" LoadType="0" Packed="False" />
+      <Resource Name="Music/AZUL/game_bgm" LoadType="0" Packed="False" />
+      <Resource Name="Music/music_about" LoadType="0" Packed="False" />
+      <Resource Name="Music/music_background" LoadType="0" Packed="False" />
+      <Resource Name="Music/music_menu" LoadType="0" Packed="False" />
       <Resource Name="Scenes/AZUL/Main" LoadType="0" Packed="False" />
       <Resource Name="Scenes/AZUL/Menu" LoadType="0" Packed="False" />
       <Resource Name="UI/UIForms/AZUL/MenuForm" LoadType="0" Packed="False" />
     </Resources>
     <Assets>
+      <Asset Guid="093f8873cfe371d41b854ed9fb6bff69" ResourceName="Music/music_about" />
       <Asset Guid="0b85ab6a0a220ef4eb36de83de7094d3" ResourceName="Materials/AZUL/block_cyan_mat" />
       <Asset Guid="1053b0070685be347ab58587156842dc" ResourceName="Localization/ChineseTraditional/Dictionaries/Default" />
       <Asset Guid="138f9c416ace5fb4d9bc127c4f8bf1be" ResourceName="Materials/AZUL/AreaMat/area_red_mat" />
@@ -55,8 +60,10 @@
       <Asset Guid="45142f50a41f7314194828cc46adcc67" ResourceName="Materials/AZUL/AreaMat/area_yellow_mat" />
       <Asset Guid="4575c9db579d9ce46a7d04c0fe7b31bb" ResourceName="Materials/AZUL/AreaMat/area_lose_mat" />
       <Asset Guid="457df730ac89c7a448d60d8177c1470c" ResourceName="DataTables/AZUL/UIForm" />
+      <Asset Guid="561eaaa85e6ef8947ab8bed807cf15da" ResourceName="Music/AZUL/game_bgm" />
       <Asset Guid="5b471847f1e02524bb87731976c0893a" ResourceName="DataTables/AZUL/Scene" />
       <Asset Guid="5dcd89912e222bf4c87f76db4044bc5e" ResourceName="Localization/Korean/Dictionaries/Default" />
+      <Asset Guid="638ff8ae4a0d15047839cd265d3bc296" ResourceName="Music/music_background" />
       <Asset Guid="6bbdb6f2eedca114b9cd7f3f3a386387" ResourceName="Materials/AZUL/block_yellow_mat" />
       <Asset Guid="734529a4f57c9e240b7133d458052f6e" ResourceName="Entities/AZUL/FactoryDisk" />
       <Asset Guid="77cbb7c5404c10242ab59953e0746314" ResourceName="Fonts/MainFont" />
@@ -72,6 +79,7 @@
       <Asset Guid="befbcd9bcb4fdbd44a2373245bac99aa" ResourceName="Entities/AZUL/Board" />
       <Asset Guid="c56a847626ef94549b12a5e54e9920fe" ResourceName="Scenes/AZUL/Main" />
       <Asset Guid="c9685146d470e0546a09d6e0101e2794" ResourceName="Materials/AZUL/block_red_mat" />
+      <Asset Guid="caa829ab2ffc71340a69253afdf58365" ResourceName="Music/music_menu" />
       <Asset Guid="cbcb7486c6b275b4e8545b5c195df4be" ResourceName="Scenes/AZUL/Menu" />
       <Asset Guid="cd73cd2532828b943bf040208cbe9018" ResourceName="UI/UIForms/AZUL/MenuForm" />
       <Asset Guid="d4ed5d9d7c3a0bf4cb0d851dc1604388" ResourceName="Entities/AZUL/LosePlaceTokenArea_0" />
