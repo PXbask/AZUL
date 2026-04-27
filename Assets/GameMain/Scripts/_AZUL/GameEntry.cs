@@ -211,6 +211,12 @@ namespace AZUL
             private set;
         }
 
+        public static NgoNetComponent NgoNet
+        {
+            get;
+            private set;
+        }
+
         private static void InitBuiltinComponents()
         {
             Base = UnityGameFramework.Runtime.GameEntry.GetComponent<BaseComponent>();
@@ -241,6 +247,7 @@ namespace AZUL
             Referee = UnityGameFramework.Runtime.GameEntry.GetComponent<RefereeComponent>();
             AI = UnityGameFramework.Runtime.GameEntry.GetComponent<AIComponent>();
             PlayerView = UnityGameFramework.Runtime.GameEntry.GetComponent<PlayerViewComponent>();
+            NgoNet = UnityGameFramework.Runtime.GameEntry.GetComponent<NgoNetComponent>();
         }
 
         private void Start()

@@ -6,6 +6,10 @@
 //------------------------------------------------------------
 
 using DG.Tweening;
+using System;
+using System.Net;
+using TMPro;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityGameFramework.Runtime;
@@ -15,7 +19,22 @@ namespace AZUL
     public class MenuForm : UGuiForm
     {
         [SerializeField]
-        private Button m_StartButton = null;
+        private Button m_StartButtonSingle = null;
+
+        [SerializeField]
+        private Button m_StartButtonMulti = null;
+
+        [SerializeField]
+        private TMP_InputField m_InputFieldMulti = null;
+
+        [SerializeField]
+        private Toggle m_ToggleMulti = null;
+
+        [SerializeField]
+        private TextMeshProUGUI m_ToggleTextServer = null;
+
+        [SerializeField]
+        private TextMeshProUGUI m_ToggleTextClient = null;
 
         [SerializeField]
         private Button m_QuitButton = null;
@@ -29,16 +48,68 @@ namespace AZUL
         private ProcedureMenu m_ProcedureMenu = null;
 
         private static readonly float FADE_ANIM_INTERVAL = 0.5f;
+        private static readonly string DEFAULT_IP = "127.0.0.1:7777";
 
         protected override void OnInit(object userData)
         {
             base.OnInit(userData);
 
-            m_StartButton.onClick.AddListener(OnStartButtonClick);
+            m_StartButtonSingle.onClick.AddListener(OnSingleStartButtonClick);
+            m_StartButtonMulti.onClick.AddListener(OnMultiStartButtonClick);
             m_QuitButton.onClick.AddListener(OnQuitButtonClick);
+
+            m_ToggleMulti.onValueChanged.AddListener(OnToggleMultiValueChanged);
+            m_ToggleMulti.onValueChanged.Invoke(true);
+
+            m_InputFieldMulti.placeholder.GetComponent<TextMeshProUGUI>().text = DEFAULT_IP;
         }
 
-        public void OnStartButtonClick()
+        private void OnToggleMultiValueChanged(bool v)
+        {
+            m_ToggleTextClient.gameObject.SetActive(!v);
+            m_ToggleTextServer.gameObject.SetActive(v);
+        }
+
+        private void OnMultiStartButtonClick()
+        {
+            //解析输入的IP地址
+            string text = m_InputFieldMulti.text?.Trim();
+            if (string.IsNullOrEmpty(text))
+            {
+                text = DEFAULT_IP;
+            }
+
+            string ipPart = string.Empty;
+            int port = 0;
+            if (text.Contains(":"))
+            {
+                var parts = text.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 2)
+                {
+                    ipPart = parts[0];
+                    if (!int.TryParse(parts[1], out port) || port < 0 || port > 65535)
+                    {
+                        Log.Error("Invalid port, using default: " + port);
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+
+            // 验证 IP（支持 IPv4 / IPv6）
+            if (!IPAddress.TryParse(ipPart, out IPAddress address))
+            {
+                Log.Error("Invalid IP address: " + ipPart);
+                return;
+            }
+
+            ApplyToUnityTransport(ipPart, (ushort)port);
+        }
+
+        public void OnSingleStartButtonClick()
         {
             m_ProcedureMenu.StartGame();
             PlayCloseAnim();
@@ -70,7 +141,7 @@ namespace AZUL
             if (m_StartTween != null)
             {
                 m_StartTween.Kill();
-                m_StartButton = null;
+                m_StartButtonSingle = null;
             }
 
             if (m_FadeTween != null)
@@ -102,6 +173,20 @@ namespace AZUL
             {
                 Close();
             });
+        }
+
+        private void ApplyToUnityTransport(string ip, ushort port)
+        {
+            var ut = GameEntry.NgoNet.Transport;
+            if (ut != null)
+            {
+                ut.SetConnectionData(ip, port);
+                Log.Info($"Set UnityTransport connection data to IP: {ip}, Port: {port}");
+            }
+            else
+            {
+                Log.Error("UnityTransport is not being used as the network transport.");
+            }
         }
     }
 }
